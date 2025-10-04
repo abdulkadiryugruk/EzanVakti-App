@@ -1,0 +1,302 @@
+[
+  {
+    "id": 1,
+    "text": "İnsanların hayırlısı, insanlara faydalı olandır.",
+    "source": "Taberani, el-Mu'cemu's-Sağir",
+    "category": "Ahlak"
+  },
+  {
+    "id": 2,
+    "text": "Allah'a ve ahiret gününe iman eden, ya hayır söylesin ya da sussun.",
+    "source": "Buhari, Müslim",
+    "category": "Ahlak"
+  },
+  {
+    "id": 3,
+    "text": "Müslüman, dilinden ve elinden Müslümanların selamette olduğu kimsedir.",
+    "source": "Buhari, Müslim",
+    "category": "Ahlak"
+  },
+  {
+    "id": 4,
+    "text": "Güzel ahlak, sevabı tükenmeyecek bir sadakadır.",
+    "source": "Taberani",
+    "category": "Ahlak"
+  },
+  {
+    "id": 5,
+    "text": "Güler yüzünle kardeşinle karşılaşman da bir sadakadır.",
+    "source": "Tirmizi",
+    "category": "Ahlak"
+  },
+  {
+    "id": 6,
+    "text": "İki günü eşit olan zarardadır.",
+    "source": "Deylemî",
+    "category": "Motivasyon"
+  },
+  {
+    "id": 7,
+    "text": "İlim Çin'de bile olsa gidin, arayın.",
+    "source": "İbn Abdilberr",
+    "category": "İlim"
+  },
+  {
+    "id": 8,
+    "text": "Kim bir mümin kardeşinin dünya sıkıntılarından birini giderirse, Allah da onun kıyamet günü sıkıntılarından birini giderir.",
+    "source": "Müslim",
+    "category": "İyilik"
+  },
+  {
+    "id": 9,
+    "text": "Cennet annelerin ayakları altındadır.",
+    "source": "Nesai, İbn Mace",
+    "category": "Aile"
+  },
+  {
+    "id": 10,
+    "text": "Sizden biriniz, kendisi için istediğini kardeşi için de istemedikçe gerçek mü'min olamaz.",
+    "source": "Buhari, Müslim",
+    "category": "İman"
+  },
+  {
+    "id": 11,
+    "text": "Allah katında amellerin en sevimlisi, az da olsa devamlı yapılanıdır.",
+    "source": "Buhari, Müslim",
+    "category": "İbadet"
+  },
+  {
+    "id": 12,
+    "text": "Kuvvetli olan, güreşte rakibini yenen değil, öfkelendiği zaman nefsine hakim olan kimsedir.",
+    "source": "Buhari, Müslim",
+    "category": "Ahlak"
+  },
+  {
+    "id": 13,
+    "text": "Allah size merhamet ettiği gibi siz de yaratılmışlara merhamet edin.",
+    "source": "Ebu Davud, Tirmizi",
+    "category": "Merhamet"
+  },
+  {
+    "id": 14,
+    "text": "Temizlik imandandır.",
+    "source": "Müslim",
+    "category": "Temizlik"
+  },
+  {
+    "id": 15,
+    "text": "Komşusu açken tok yatan kimse bizden değildir.",
+    "source": "Hakim",
+    "category": "Komşuluk"
+  },
+  {
+    "id": 16,
+    "text": "Mü'minin mü'mine karşı hali, bir binanın duvarlarının birbirini tutması gibidir.",
+    "source": "Buhari, Müslim",
+    "category": "Kardeşlik"
+  },
+  {
+    "id": 17,
+    "text": "Size iki şey bırakıyorum. Onlara sımsıkı sarıldığınız sürece yolunuzu şaşırmazsınız: Allah'ın kitabı ve Peygamberinin sünneti.",
+    "source": "Muvatta",
+    "category": "İman"
+  },
+  {
+    "id": 18,
+    "text": "Dua ibadetin özüdür.",
+    "source": "Tirmizi",
+    "category": "İbadet"
+  },
+  {
+    "id": 19,
+    "text": "Sabır ışıktır.",
+    "source": "Müslim",
+    "category": "Sabır"
+  },
+  {
+    "id": 20,
+    "text": "Güzel söz sadakadır.",
+    "source": "Buhari, Müslim",
+    "category": "Konuşma"
+  },
+  {
+    "id": 21,
+    "text": "Allah güzeldir, güzel olanı sever.",
+    "source": "Müslim",
+    "category": "Estetik"
+  },
+  {
+    "id": 22,
+    "text": "Hayâ imandandır.",
+    "source": "Buhari, Müslim",
+    "category": "Ahlak"
+  },
+  {
+    "id": 23,
+    "text": "İnsanların en hayırlısı, ömrü uzun ve ameli güzel olandır.",
+    "source": "Tirmizi",
+    "category": "Amel"
+  },
+  {
+    "id": 24,
+    "text": "Kim bir yolu kolaylaştırırsa, Allah da onun için cennete giden yolu kolaylaştırır.",
+    "source": "Müslim",
+    "category": "İyilik"
+  },
+  {
+    "id": 25,
+    "text": "Rızık peşinde koşmayın, rızık sizin peşinizden koşar.",
+    "source": "İbn Hibban",
+    "category": "Tevekkül"
+  },
+  {
+    "id": 26,
+    "text": "Akıllı kişi, nefsini hesaba çeken ve ölümden sonrası için çalışandır.",
+    "source": "Tirmizi",
+    "category": "Ahiret"
+  },
+  {
+    "id": 27,
+    "text": "Şükür, nimetin devamıdır.",
+    "source": "Beyhaki",
+    "category": "Şükür"
+  },
+  {
+    "id": 28,
+    "text": "Bir kimsenin İslam'ının güzelliği, kendisini ilgilendirmeyen şeylerden uzak durmasıdır.",
+    "source": "Tirmizi",
+    "category": "Ahlak"
+  },
+  {
+    "id": 29,
+    "text": "Cömertlik ve iman bir arada, cimrilik ve küfür bir arada bulunur.",
+    "source": "Beyhaki",
+    "category": "Cömertlik"
+  },
+  {
+    "id": 30,
+    "text": "Fitneye düşmekten Allah'a sığının.",
+    "source": "Buhari",
+    "category": "Fitne"
+  },
+  {
+    "id": 31,
+    "text": "Allah, bir kulunu hayra yöneltmek isterse onu fıkıh ilmine yöneltir.",
+    "source": "Buhari",
+    "category": "İlim"
+  },
+  {
+    "id": 32,
+    "text": "İman yetmiş küsur şubedir, en üstünü La ilahe illallah demek, en aşağısı ise yoldan taş ve diken kaldırmaktır.",
+    "source": "Müslim",
+    "category": "İman"
+  },
+  {
+    "id": 33,
+    "text": "Kişi sevdiğiyle beraberdir.",
+    "source": "Buhari, Müslim",
+    "category": "Sevgi"
+  },
+  {
+    "id": 34,
+    "text": "Öfke şeytandandır.",
+    "source": "Ebu Davud",
+    "category": "Öfke"
+  },
+  {
+    "id": 35,
+    "text": "Helal açıktır, haram da açıktır. İkisi arasında şüpheli şeyler vardır.",
+    "source": "Buhari, Müslim",
+    "category": "Helal-Haram"
+  },
+  {
+    "id": 36,
+    "text": "Sana gelen şey, seni ıskalamamıştır; seni ıskalayana da erişemezsin.",
+    "source": "Ebu Davud",
+    "category": "Kader"
+  },
+  {
+    "id": 37,
+    "text": "Kim Allah için bir eve giderse, Allah onun için cennette bir ev hazırlar.",
+    "source": "Müslim",
+    "category": "İbadet"
+  },
+  {
+    "id": 38,
+    "text": "Allah Teala günahlardan pişmanlık duyana bakar ve onu affeder.",
+    "source": "İbn Mace",
+    "category": "Tevbe"
+  },
+  {
+    "id": 39,
+    "text": "İyilik tavsiye etmektir.",
+    "source": "Müslim",
+    "category": "İyilik"
+  },
+  {
+    "id": 40,
+    "text": "Kırk hadis ezberleyip ümmetim içerisinde koruyan kişiyi, Allah kıyamet gününde alimler ve fakihler arasında diriltir.",
+    "source": "Beyhaki",
+    "category": "İlim"
+  },
+  {
+    "id": 41,
+    "text": "Allah katında en sevimli amel, az da olsa devamlı yapılandır.",
+    "source": "Buhari, Müslim",
+    "category": "Amel"
+  },
+  {
+    "id": 42,
+    "text": "Müminlerin, iman bakımından en mükemmeli, ahlakları en güzel olanıdır.",
+    "source": "Ebu Davud, Tirmizi",
+    "category": "Ahlak"
+  },
+  {
+    "id": 43,
+    "text": "Kim bir iyiliği yaparsa, on katı sevap kazanır.",
+    "source": "Kuran, 6:160",
+    "category": "Sevap"
+  },
+  {
+    "id": 44,
+    "text": "Hayırda acele edin.",
+    "source": "Müslim",
+    "category": "İyilik"
+  },
+  {
+    "id": 45,
+    "text": "Gördüğün kötülüğü elinle değiştir, eğer gücün yetmiyorsa dilinle, ona da gücün yetmiyorsa kalbin ile.",
+    "source": "Müslim",
+    "category": "İyilik Emretme"
+  },
+  {
+    "id": 46,
+    "text": "İlim öğrenmek her Müslümana farzdır.",
+    "source": "İbn Mace",
+    "category": "İlim"
+  },
+  {
+    "id": 47,
+    "text": "Allah'tan korkan gözden ateş dokunmaz.",
+    "source": "Tirmizi",
+    "category": "Takva"
+  },
+  {
+    "id": 48,
+    "text": "İnsanları güldüren de bir sadakadır.",
+    "source": "Tirmizi",
+    "category": "İyilik"
+  },
+  {
+    "id": 49,
+    "text": "Bugünün işini yarına bırakma.",
+    "source": "İslami Öğüt",
+    "category": "Motivasyon"
+  },
+  {
+    "id": 50,
+    "text": "Allah sizin suretlerinize ve mallarınıza bakmaz, kalplerinize ve amellerinize bakar.",
+    "source": "Müslim",
+    "category": "Kalp"
+  }
+]

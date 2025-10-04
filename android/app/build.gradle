@@ -77,19 +77,19 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.ezanvaktiapp"
+    namespace "com.ezanvakti"
     defaultConfig {
-        applicationId "com.ezanvaktiapp"
+        applicationId "com.ezanvakti"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
     }
     project.ext.vectoricons = [
-    iconFontNames: [ 'MaterialCommunityIcons.ttf' ]
-]
+            iconFontNames: [ 'MaterialCommunityIcons.ttf' ]
+    ]
 
-apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
+    apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
     signingConfigs {
         debug {
             storeFile file('debug.keystore')
@@ -110,16 +110,23 @@ apply from: "../../node_modules/react-native-vector-icons/fonts.gradle"
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
+    packagingOptions {
+    pickFirst 'lib/arm64-v8a/libhermes.so'
+    pickFirst 'lib/arm64-v8a/libhermes_executor.so'
+    pickFirst 'lib/arm64-v8a/libhermestooling.so'
+    pickFirst 'lib/armeabi-v7a/libhermes.so'
+    pickFirst 'lib/armeabi-v7a/libhermes_executor.so'
+    pickFirst 'lib/armeabi-v7a/libhermestooling.so'
+}
 }
 
 dependencies {
     // The version of react-native is set by the React Native Gradle Plugin
     implementation("com.facebook.react:react-android")
-
+    implementation project(':react-native-vector-icons')
     if (hermesEnabled.toBoolean()) {
         implementation("com.facebook.react:hermes-android")
     } else {
         implementation jscFlavor
     }
 }
-

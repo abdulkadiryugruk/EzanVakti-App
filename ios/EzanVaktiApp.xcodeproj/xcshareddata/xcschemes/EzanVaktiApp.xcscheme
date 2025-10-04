@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-               BuildableName = "EzanVaktiApp.app"
-               BlueprintName = "EzanVaktiApp"
-               ReferencedContainer = "container:EzanVaktiApp.xcodeproj">
+               BuildableName = "EzanVakti.app"
+               BlueprintName = "EzanVakti"
+               ReferencedContainer = "container:EzanVakti.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -33,9 +33,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "00E356ED1AD99517003FC87E"
-               BuildableName = "EzanVaktiAppTests.xctest"
-               BlueprintName = "EzanVaktiAppTests"
-               ReferencedContainer = "container:EzanVaktiApp.xcodeproj">
+               BuildableName = "EzanVaktiTests.xctest"
+               BlueprintName = "EzanVaktiTests"
+               ReferencedContainer = "container:EzanVakti.xcodeproj">
             </BuildableReference>
          </TestableReference>
       </Testables>
@@ -55,9 +55,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "EzanVaktiApp.app"
-            BlueprintName = "EzanVaktiApp"
-            ReferencedContainer = "container:EzanVaktiApp.xcodeproj">
+            BuildableName = "EzanVakti.app"
+            BlueprintName = "EzanVakti"
+            ReferencedContainer = "container:EzanVakti.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -72,9 +72,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "13B07F861A680F5B00A75B9A"
-            BuildableName = "EzanVaktiApp.app"
-            BlueprintName = "EzanVaktiApp"
-            ReferencedContainer = "container:EzanVaktiApp.xcodeproj">
+            BuildableName = "EzanVakti.app"
+            BlueprintName = "EzanVakti"
+            ReferencedContainer = "container:EzanVakti.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

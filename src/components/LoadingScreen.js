@@ -21,8 +21,8 @@ const LoadingScreen = () => {
         <View style={styles.iconContainer}>
             {/* Burada uygulamanın ana ikonu varsa onu kullanabilirsin, yoksa cami ikonu */}
             <Image 
-                source={require('../assets/seccade.png')} // Veya senin launcher ikonun
-                style={{ width: 100, height: 100, tintColor: '#fff' }}
+                source={require('../assets/appIcon.png')}
+                style={{ width: 120, height: 120 }}
                 resizeMode="contain"
             />
         </View>

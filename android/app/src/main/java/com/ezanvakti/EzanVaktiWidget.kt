@@ -7,14 +7,11 @@ import android.appwidget.AppWidgetProvider
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.os.SystemClock
 import android.widget.RemoteViews
 import com.ezanvakti.utils.JsonUtils
 import java.util.Calendar
-import java.text.SimpleDateFormat
-import java.util.Locale
-
-
+import java.util.concurrent.TimeUnit
+import android.os.Build
 
 class EzanVaktiWidget : AppWidgetProvider() {
 
@@ -22,7 +19,6 @@ class EzanVaktiWidget : AppWidgetProvider() {
         for (appWidgetId in appWidgetIds) {
             updateWidget(context, appWidgetManager, appWidgetId)
         }
-        scheduleNextUpdate(context)
     }
 
     override fun onEnabled(context: Context) {
@@ -32,6 +28,7 @@ class EzanVaktiWidget : AppWidgetProvider() {
 
     override fun onDisabled(context: Context) {
         super.onDisabled(context)
+        // Alarmı iptal et
         val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, EzanVaktiWidget::class.java).apply {
             action = ACTION_AUTO_UPDATE
@@ -47,8 +44,7 @@ class EzanVaktiWidget : AppWidgetProvider() {
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
-
-        if (intent.action == ACTION_AUTO_UPDATE) {
+        if (intent.action == ACTION_AUTO_UPDATE || intent.action == AppWidgetManager.ACTION_APPWIDGET_UPDATE) {
             val appWidgetManager = AppWidgetManager.getInstance(context)
             val componentName = ComponentName(context, EzanVaktiWidget::class.java)
             val appWidgetIds = appWidgetManager.getAppWidgetIds(componentName)
@@ -56,7 +52,6 @@ class EzanVaktiWidget : AppWidgetProvider() {
             for (appWidgetId in appWidgetIds) {
                 updateWidget(context, appWidgetManager, appWidgetId)
             }
-
             scheduleNextUpdate(context)
         }
     }
@@ -64,82 +59,35 @@ class EzanVaktiWidget : AppWidgetProvider() {
     private fun updateWidget(context: Context, appWidgetManager: AppWidgetManager, appWidgetId: Int) {
         val views = RemoteViews(context.packageName, R.layout.ezanvakti_widget)
         val prefs = context.getSharedPreferences("EzanVaktiPref", Context.MODE_PRIVATE)
-        
-        val now = Calendar.getInstance()
-        val formatter = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val nowTime = formatter.format(now.time)
-        
-        // Mevcut verileri oku
-        var nextPrayer = prefs.getString("NEXT_PRAYER", "...")
-        var prayerTime = prefs.getString("PRAYER_TIME", "...")
-        
-        // ÖNEMLİ: Kayıtlı vakit saati şu anki saatten küçükse (geçmişse), yeni vakit bul
-        var shouldFindNextPrayer = false
-        if (!prayerTime.isNullOrEmpty() && prayerTime != "...") {
-            shouldFindNextPrayer = isPrayerTimePassed(nowTime, prayerTime)
-        } else {
-            shouldFindNextPrayer = true // İlk açılışta veya veri yoksa
-        }
-        
-        // Eğer vakit geçmişse veya veri yoksa, bir sonraki vakti bul
-        if (shouldFindNextPrayer) {
-            val prayerTimes = JsonUtils.getTodaysPrayerTimes(context)
-            if (prayerTimes != null) {
-                var nextPrayerName = ""
-                var nextPrayerTime = ""
 
-                // Sıralı namaz vakitleri listesi
-                val orderedPrayers = listOf(
-                    "İmsak" to prayerTimes["İmsak"],
-                    "Güneş" to prayerTimes["Güneş"],
-                    "Öğle" to prayerTimes["Öğle"],
-                    "İkindi" to prayerTimes["İkindi"],
-                    "Akşam" to prayerTimes["Akşam"],
-                    "Yatsı" to prayerTimes["Yatsı"]
-                )
+        var nextPrayerName = prefs.getString("NEXT_PRAYER", "Yükleniyor")
+        var nextPrayerTime = prefs.getString("PRAYER_TIME", "--:--")
 
-                // Bir sonraki vakti bul
-                for ((name, time) in orderedPrayers) {
-                    if (time != null && time > nowTime) {
-                        nextPrayerName = name
-                        nextPrayerTime = time
-                        break
-                    }
-                }
+        // ŞUANKİ DURUM KONTROLÜ
+        // Eğer vakit geçmişse veya veri yoksa, YENİ VAKTİ HESAPLA
+        if (isPrayerTimePassed(nextPrayerTime)) {
+            val newData = findNextPrayer(context)
+            if (newData != null) {
+                nextPrayerName = newData.first
+                nextPrayerTime = newData.second
 
-                // Eğer bugün için vakit kalmadıysa, yarın için İmsak'ı göster
-                if (nextPrayerTime.isEmpty()) {
-                    nextPrayerName = "İmsak"
-                    nextPrayerTime = prayerTimes["İmsak"] ?: "..."
-                }
-
-                // Yeni bilgileri kaydet
-                if (nextPrayerTime.isNotEmpty()) {
-                    val newTimeToNext = calculateRemainingTime(nowTime, nextPrayerTime)
-                    prefs.edit()
-                        .putString("NEXT_PRAYER", nextPrayerName)
-                        .putString("PRAYER_TIME", nextPrayerTime)
-                        .putString("TIME_TO_NEXT_PRAYER", newTimeToNext)
-                        .putLong("LAST_UPDATE_TIME", System.currentTimeMillis())
-                        .apply()
-                    
-                    nextPrayer = nextPrayerName
-                    prayerTime = nextPrayerTime
-                }
+                // Yeni veriyi kaydet
+                prefs.edit()
+                    .putString("NEXT_PRAYER", nextPrayerName)
+                    .putString("PRAYER_TIME", nextPrayerTime)
+                    .apply()
             }
         }
-        
-        // Kalan süreyi her zaman yeniden hesapla
-        val originalTimeToNext = prefs.getString("TIME_TO_NEXT_PRAYER", "...")
-        val lastUpdateTime = prefs.getLong("LAST_UPDATE_TIME", 0L)
-        val timeToDisplay = calculateRemainingTime(originalTimeToNext, lastUpdateTime)
 
-        // Widget içeriğini ayarla
-        views.setTextViewText(R.id.widget_prayer, nextPrayer)
-        views.setTextViewText(R.id.widget_time, prayerTime)
-        views.setTextViewText(R.id.widget_remaining, "Süre: $timeToDisplay")
+        // Kalan Süreyi Hesapla
+        val remainingText = calculateTimeLeft(nextPrayerTime)
 
-        // Widget'a tıklayınca uygulamayı aç
+        // UI Güncelle
+        views.setTextViewText(R.id.widget_prayer, nextPrayerName)
+        views.setTextViewText(R.id.widget_time, nextPrayerTime)
+        views.setTextViewText(R.id.widget_remaining, "Süre: $remainingText")
+
+        // Tıklama ile uygulamayı aç
         val intent = Intent(context, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
             context,
@@ -151,50 +99,92 @@ class EzanVaktiWidget : AppWidgetProvider() {
 
         appWidgetManager.updateAppWidget(appWidgetId, views)
     }
-    
-    // Vakit saati geçmiş mi kontrol et
-    private fun isPrayerTimePassed(currentTime: String, prayerTime: String): Boolean {
-        return try {
-            val format = SimpleDateFormat("HH:mm", Locale.getDefault())
-            val now = Calendar.getInstance()
-            val prayer = Calendar.getInstance()
-            
-            val currentParts = currentTime.split(":")
-            val prayerParts = prayerTime.split(":")
-            
-            if (currentParts.size != 2 || prayerParts.size != 2) return false
-            
-            now.set(Calendar.HOUR_OF_DAY, currentParts[0].toInt())
-            now.set(Calendar.MINUTE, currentParts[1].toInt())
-            now.set(Calendar.SECOND, 0)
-            
-            prayer.set(Calendar.HOUR_OF_DAY, prayerParts[0].toInt())
-            prayer.set(Calendar.MINUTE, prayerParts[1].toInt())
-            prayer.set(Calendar.SECOND, 0)
-            
-            // Eğer vakit saati şu anki saatten önce ise, vakit geçmiş demektir
-            now.timeInMillis >= prayer.timeInMillis
+
+    // Kritik Fonksiyon: Sıradaki vakti bulur (Yarın dahil)
+    private fun findNextPrayer(context: Context): Pair<String, String>? {
+        // 1. Bugünün verilerini al
+        val todaysPrayers = JsonUtils.getTodaysPrayerTimes(context) ?: return null
+
+        val now = Calendar.getInstance()
+        val currentHour = now.get(Calendar.HOUR_OF_DAY)
+        val currentMinute = now.get(Calendar.MINUTE)
+        val currentTimeInMinutes = currentHour * 60 + currentMinute
+
+        // Sıralama önemli
+        val orderedKeys = listOf("İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı")
+        
+        // 2. Bugünün vakitlerini kontrol et
+        for (key in orderedKeys) {
+            val timeStr = todaysPrayers[key] ?: continue
+            if (convertTimeToMinutes(timeStr) > currentTimeInMinutes) {
+                // Bulduk! Bu vakit henüz gelmemiş.
+                return Pair(key, timeStr)
+            }
+        }
+
+        // 3. Eğer döngü bittiyse bugün tüm vakitler geçmiş demektir.
+        // YARINKİ İMSAK vaktini bulmalıyız.
+        
+        val tomorrowsPrayers = JsonUtils.getTomorrowsPrayerTimes(context)
+        if (tomorrowsPrayers != null) {
+            val tomorrowImsak = tomorrowsPrayers["İmsak"]
+            if (tomorrowImsak != null) {
+                return Pair("İmsak", tomorrowImsak)
+            }
+        }
+
+        // 4. Yarının verisi yoksa (JSON'da eksikse), bugünün İmsak vaktini döndür (Fallback)
+        // calculateTimeLeft fonksiyonu bunu "yarın" olarak algılayıp düzeltecektir.
+        return Pair("İmsak", todaysPrayers["İmsak"] ?: "00:00")
+    }
+
+    private fun convertTimeToMinutes(timeStr: String): Int {
+        try {
+            val parts = timeStr.split(":")
+            return parts[0].toInt() * 60 + parts[1].toInt()
         } catch (e: Exception) {
-            e.printStackTrace()
-            false
+            return -1
         }
     }
 
-    private fun calculateRemainingTime(timeStr: String?, lastUpdate: Long): String? {
-        if (lastUpdate <= 0 || timeStr.isNullOrBlank() || !timeStr.contains(":")) {
-            return timeStr
-        }
+    private fun isPrayerTimePassed(timeStr: String?): Boolean {
+        if (timeStr.isNullOrEmpty() || timeStr == "--:--") return true
+        val timeInMinutes = convertTimeToMinutes(timeStr)
+        if (timeInMinutes == -1) return true
 
-        return try {
-            val (hours, minutes) = timeStr.split(":").map { it.toInt() }
-            val totalOriginal = hours * 60 + minutes
-            val elapsed = ((System.currentTimeMillis() - lastUpdate) / 60000).toInt()
-            val remaining = maxOf(0, totalOriginal - elapsed)
-            val remHours = remaining / 60
-            val remMinutes = remaining % 60
-            String.format("%02d:%02d", remHours, remMinutes)
+        val now = Calendar.getInstance()
+        val currentMinutes = now.get(Calendar.HOUR_OF_DAY) * 60 + now.get(Calendar.MINUTE)
+
+        // Eğer hedef dakika şu andan küçük veya eşitse vakit geçmiştir.
+        return currentMinutes >= timeInMinutes
+    }
+
+    private fun calculateTimeLeft(targetTimeStr: String?): String {
+        if (targetTimeStr.isNullOrEmpty() || targetTimeStr == "--:--") return "--:--"
+
+        try {
+            val now = Calendar.getInstance()
+            val target = Calendar.getInstance()
+
+            val parts = targetTimeStr.split(":")
+            target.set(Calendar.HOUR_OF_DAY, parts[0].toInt())
+            target.set(Calendar.MINUTE, parts[1].toInt())
+            target.set(Calendar.SECOND, 0)
+            target.set(Calendar.MILLISECOND, 0)
+
+            // Eğer hedef saat şu andan önceyse, bu hedef YARIN demektir.
+            // (Örn: Gece 23:00'da İmsak 05:00'ı gösteriyorsak)
+            if (target.before(now)) {
+                target.add(Calendar.DAY_OF_YEAR, 1)
+            }
+
+            val diffMillis = target.timeInMillis - now.timeInMillis
+            val hours = TimeUnit.MILLISECONDS.toHours(diffMillis)
+            val minutes = TimeUnit.MILLISECONDS.toMinutes(diffMillis) % 60
+
+            return String.format("%02d:%02d", hours, minutes)
         } catch (e: Exception) {
-            timeStr // Hatalı format varsa orijinali döndür
+            return "--:--"
         }
     }
 
@@ -211,30 +201,18 @@ class EzanVaktiWidget : AppWidgetProvider() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
-        val intervalMillis = 60 * 1000L // 1 dakika
-        val triggerAtMillis = System.currentTimeMillis() + intervalMillis
-        alarmManager.setExact(AlarmManager.RTC_WAKEUP, triggerAtMillis, pendingIntent)
+        // Tam dakika başında çalışması için milisaniye hesabı
+        val now = System.currentTimeMillis()
+        val nextMinute = now + (60000 - (now % 60000)) // Bir sonraki dakikanın tam 00. saniyesi
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            alarmManager.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+        } else {
+            alarmManager.setExact(AlarmManager.RTC_WAKEUP, nextMinute, pendingIntent)
+        }
     }
 
     companion object {
         const val ACTION_AUTO_UPDATE = "com.ezanvakti.ACTION_AUTO_UPDATE"
     }
-private fun calculateRemainingTime(currentTime: String, nextTime: String): String {
-    try {
-        val format = SimpleDateFormat("HH:mm", Locale.getDefault())
-        val current = format.parse(currentTime)
-        val next = format.parse(nextTime)
-
-        if (current != null && next != null) {
-            val diffMillis = next.time - current.time
-            val diffMinutes = diffMillis / (60 * 1000)
-            val hours = diffMinutes / 60
-            val minutes = diffMinutes % 60
-            return String.format("%02d:%02d", hours, minutes)
-        }
-    } catch (_: Exception) {}
-    return "00:00"
-}
-
-
 }

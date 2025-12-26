@@ -2,18 +2,22 @@ import React from 'react';
 import { View, ScrollView, StyleSheet } from 'react-native';
 import PrayerTimes from '../components/PrayerTimes';
 import DailyHadith from '../components/DailyHadith';
+import LoadingScreen from '../components/LoadingScreen'; // <--- Bunu ekle
 import { useTheme } from '../context/ThemeContext';
 
 const PrayerTimesScreen = ({ prayerTimes, loading, nextPrayer }) => {
   const { colors } = useTheme();
   
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
   return (
     <ScrollView 
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={styles.scrollContent}
       showsVerticalScrollIndicator={false}
     >
-      {/* Namaz Vakitleri - Fixed height */}
       <View style={styles.prayerTimesWrapper}>
         <PrayerTimes 
           prayerTimes={prayerTimes} 
@@ -22,7 +26,6 @@ const PrayerTimesScreen = ({ prayerTimes, loading, nextPrayer }) => {
         />
       </View>
       
-      {/* Günün Hadisi */}
       {!loading && <DailyHadith />}
     </ScrollView>
   );

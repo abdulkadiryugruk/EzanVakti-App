@@ -97,6 +97,13 @@ android {
             keyAlias 'androiddebugkey'
             keyPassword 'android'
         }
+        release {
+            // Dosya yolunu tam olarak yazıyoruz (Hata aldığın yol)
+            storeFile file("/Users/abdul/Desktop/WORKs/KEYs/EzanVaktiApp-key.jks")
+            storePassword "BURAYA_KEYSTORE_SIFREN" // JKS dosyasını oluştururken girdiğin şifre
+            keyAlias "key0" // Genelde varsayılan key0'dır, ama değiştirdiysen onu yaz
+            keyPassword "BURAYA_KEY_SIFREN" // Genelde storePassword ile aynıdır
+        }
     }
     buildTypes {
         debug {
@@ -105,7 +112,7 @@ android {
         release {
             // Caution! In production, you need to generate your own keystore file.
             // see https://reactnative.dev/docs/signed-apk-android.
-            signingConfig signingConfigs.debug
+            signingConfig signingConfigs.release 
             minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }

@@ -9,9 +9,10 @@ import java.util.*
 object JsonUtils {
     private const val FILE_NAME = "ezan_times.json"
 
-    // Tarihi formatla (yyyy-MM-dd)
+    // [DÜZELTME] Locale.US kullanıyoruz ki telefon dili Türkçe/Arapça olsa bile
+    // tarih formatı "2025-12-26" standardında kalsın.
     private fun formatDate(date: Date): String {
-        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault())
+        val formatter = SimpleDateFormat("yyyy-MM-dd", Locale.US)
         return formatter.format(date)
     }
 
@@ -25,7 +26,6 @@ object JsonUtils {
         return formatDate(calendar.time)
     }
 
-    // Belirli bir tarih için ezan vakitlerini getir
     fun getPrayerTimes(context: Context, dateKey: String): Map<String, String>? {
         val file = File(context.filesDir, FILE_NAME)
         if (!file.exists()) return null
@@ -35,12 +35,13 @@ object JsonUtils {
             if (content.isEmpty()) return null
             
             val json = JSONObject(content)
+            
+            // Eğer o günün verisi yoksa null döndür
             if (!json.has(dateKey)) return null
 
             val timesObj = json.getJSONObject(dateKey)
             val result = mutableMapOf<String, String>()
             
-            // Iterator kullanarak güvenli okuma
             val keys = timesObj.keys()
             while (keys.hasNext()) {
                 val key = keys.next()
@@ -53,57 +54,12 @@ object JsonUtils {
         }
     }
 
-    // Eski kodlarla uyumluluk için (Bugünü getir)
-    fun getTodaysPrayerTimes(context: Context): Map<String, String>? {
-        return getPrayerTimes(context, getTodayDateKey())
-    }
-
-    // Yarınki vakitleri getir (Gece yarısı hesaplamaları için kritik)
-    fun getTomorrowsPrayerTimes(context: Context): Map<String, String>? {
-        return getPrayerTimes(context, getTomorrowDateKey())
-    }
-
-    // Belirli bir tarih için vakitleri kaydet
-    fun savePrayerTimes(context: Context, dateKey: String, prayerTimes: Map<String, String>) {
-        try {
-            val file = File(context.filesDir, FILE_NAME)
-            val json = if (file.exists() && file.length() > 0) {
-                try {
-                    JSONObject(file.readText())
-                } catch (e: Exception) {
-                    JSONObject()
-                }
-            } else {
-                JSONObject()
-            }
-
-            val timesObj = JSONObject()
-            for ((key, value) in prayerTimes) {
-                timesObj.put(key, value)
-            }
-
-            json.put(dateKey, timesObj)
-            file.writeText(json.toString())
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    // Eski kodlarla uyumluluk için (EzanDataModule burayı çağırıyor)
-    fun writePrayerTimes(context: Context, prayerTimes: Map<String, String>) {
-        savePrayerTimes(context, getTodayDateKey(), prayerTimes)
-    }
-
-    // Toplu veri kaydetme (Gelecekte React Native'den 30 günlük veri gönderirsen burayı kullanabilirsin)
+    // React Native'den gelen toplu veriyi kaydetme
     fun saveBulkPrayerTimes(context: Context, data: Map<String, Map<String, String>>) {
         try {
             val file = File(context.filesDir, FILE_NAME)
             val json = if (file.exists() && file.length() > 0) {
-                try {
-                    JSONObject(file.readText())
-                } catch (e: Exception) {
-                    JSONObject()
-                }
+                try { JSONObject(file.readText()) } catch (e: Exception) { JSONObject() }
             } else {
                 JSONObject()
             }
@@ -122,9 +78,12 @@ object JsonUtils {
         }
     }
 
-    // Tüm veriyi temizle
-    fun clearAllPrayerTimes(context: Context) {
-        val file = File(context.filesDir, FILE_NAME)
-        if (file.exists()) file.delete()
+    fun getTodaysPrayerTimes(context: Context) = getPrayerTimes(context, getTodayDateKey())
+    fun getTomorrowsPrayerTimes(context: Context) = getPrayerTimes(context, getTomorrowDateKey())
+    
+    // Tekil kaydetme (Eski uyumluluk için)
+    fun writePrayerTimes(context: Context, prayerTimes: Map<String, String>) {
+        val data = mapOf(getTodayDateKey() to prayerTimes)
+        saveBulkPrayerTimes(context, data)
     }
 }

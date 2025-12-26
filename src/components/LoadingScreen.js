@@ -4,12 +4,15 @@ import { useTheme } from '../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
-const LoadingScreen = () => {
+const LoadingScreen = ({ message }) => {
   const { colors } = useTheme();
+
+  const textToDisplay = message || "Vakitler Hesaplanıyor...";
+  
+  const [mainText, subDescription] = textToDisplay.split('\n');
 
   return (
     <View style={[styles.container, { backgroundColor: colors.primary }]}>
-      {/* Arka Plan Deseni (Hafif Görünür) */}
       <Image
         source={require('../assets/mosque_pattern.jpg')}
         style={styles.backgroundImage}
@@ -17,11 +20,9 @@ const LoadingScreen = () => {
       />
 
       <View style={styles.content}>
-        {/* Uygulama Logosu veya İkonu */}
         <View style={styles.iconContainer}>
-            {/* Burada uygulamanın ana ikonu varsa onu kullanabilirsin, yoksa cami ikonu */}
             <Image 
-                source={require('../assets/appIcon.png')}
+                source={require('../assets/appIcon.png')} // Bu dosyanın assets klasöründe olduğundan emin ol
                 style={{ width: 120, height: 120 }}
                 resizeMode="contain"
             />
@@ -31,8 +32,12 @@ const LoadingScreen = () => {
         
         <View style={styles.loadingWrapper}>
             <ActivityIndicator size="large" color="#ffffff" />
-            <Text style={styles.loadingText}>Vakitler Hesaplanıyor...</Text>
-            <Text style={styles.subText}>1 yıllık takvim hazırlanıyor</Text>
+            
+            <Text style={styles.loadingText}>{mainText}</Text>
+            
+            {subDescription && (
+                <Text style={styles.subText}>{subDescription}</Text>
+            )}
         </View>
       </View>
     </View>
@@ -49,7 +54,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     width: '100%',
     height: '100%',
-    opacity: 0.1, // Deseni hafiflet
+    opacity: 0.1, 
   },
   content: {
     alignItems: 'center',
@@ -76,11 +81,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#ffffff',
     fontWeight: '600',
+    textAlign: 'center', // Metin ortalansın
   },
   subText: {
     marginTop: 5,
-    fontSize: 12,
-    color: 'rgba(255,255,255,0.7)',
+    fontSize: 13, // Biraz daha okunaklı yaptım
+    color: 'rgba(255,255,255,0.8)',
+    textAlign: 'center', // Metin ortalansın
   }
 });
 

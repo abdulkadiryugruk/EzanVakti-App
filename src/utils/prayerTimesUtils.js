@@ -1,45 +1,41 @@
 import { NativeModules } from 'react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-// axios'u sildim, fetch kullanıyoruz.
 
 const { EzanDataModule } = NativeModules;
 const CACHE_KEY = 'prayer_times_cache';
 
-export const fetchPrayerTimes = async (selectedCity, forceRefresh = false) => {
+export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDownloading = () => {}) => {
   try {
     const today = moment();
     const formattedToday = today.format('YYYY-MM-DD');
 
     console.log('Veri kontrol ediliyor:', selectedCity);
 
-    // 1. Önce Cache Kontrolü (İnternet harcamamak için)
     if (!forceRefresh) {
         const cachedString = await AsyncStorage.getItem(CACHE_KEY);
         if (cachedString) {
-            const cachedData = JSON.parse(cachedString);
+            const cache = JSON.parse(cachedString);
             
-            // Eğer bugünün verisi cache'de varsa ve şehir aynıysa kullan
-            // (Not: Burada şehir kontrolünü basitleştirdim, cache yapın şehir bazlıysa ona göre bakılır)
-            if (cachedData[formattedToday]) {
+            if (cache[selectedCity] && cache[selectedCity][formattedToday]) {
                 console.log('Cache verisi bulundu, API atlanıyor.');
                 
-                // Cache'teki veriyi de her ihtimale karşı Widget'a tekrar gönder (Senkronizasyon için)
                 if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
-                    EzanDataModule.saveAllPrayerTimes(cachedData);
+                    EzanDataModule.saveAllPrayerTimes(cache[selectedCity]);
                 }
-                return cachedData[formattedToday];
+                return cache[selectedCity][formattedToday];
             }
         }
     }
 
-    // 2. Cache yoksa veya zorla yenileniyorsa 1 Yıllık Veri Çek
+    onDownloading();
+    
     console.log('API\'den 1 Yıllık veri çekiliyor...');
     
     const fullYearData = {};
     const requests = [];
     
-    // 12 aylık döngü
+    // 12 Aylık döngü
     for (let i = 0; i < 12; i++) {
         const dateCursor = moment().add(i, 'months');
         const month = dateCursor.month() + 1;
@@ -55,16 +51,18 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false) => {
         }
     });
 
-    // 3. Veriyi hem Native Widget'a hem de AsyncStorage'a kaydet
     if (Object.keys(fullYearData).length > 0) {
-        // A) Native Widget İçin (Dosyaya Yazar)
+        // 1. Native Tarafa Kaydet (Widget için)
         if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
             EzanDataModule.saveAllPrayerTimes(fullYearData);
             console.log("1 Yıllık veri Widget'a aktarıldı.");
         }
 
-        // B) React Native İçin (Sonraki açılışta hızlı olsun diye)
-        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(fullYearData));
+        const cleanCache = {
+            [selectedCity]: fullYearData
+        };
+        
+        await AsyncStorage.setItem(CACHE_KEY, JSON.stringify(cleanCache));
     }
 
     return fullYearData[formattedToday] || null;
@@ -90,23 +88,18 @@ const fetchMonthData = async (city, year, month) => {
             const rawDate = item.date.gregorian.date; 
             const dateKey = moment(rawDate, "DD-MM-YYYY").format("YYYY-MM-DD");
             
-            // --- DÜZELTME BURADA ---
-            // API'den gelen (+03) gibi fazlalıkları temizleyelim
             const cleanedTimings = {};
             
-            // item.timings içindeki her bir vakti (Fajr, Dhuhr vs.) dönüyoruz
             Object.keys(item.timings).forEach(key => {
                 const timeValue = item.timings[key];
-                // "06:43 (+03)" -> boşluğa göre böl ve ilk parçayı al -> "06:43"
                 if (typeof timeValue === 'string') {
-                     cleanedTimings[key] = timeValue.split(' ')[0];
+                     cleanedTimings[key] = timeValue.split(' ')[0]; // (Eest) temizliği
                 } else {
                      cleanedTimings[key] = timeValue;
                 }
             });
 
             monthlyMap[dateKey] = cleanedTimings;
-            // -----------------------
         });
 
         return monthlyMap;
@@ -116,9 +109,7 @@ const fetchMonthData = async (city, year, month) => {
     }
 };
 
-// ... findNextPrayer ve diğer fonksiyonların aynen kalabilir ...
 export const findNextPrayer = (prayerTimes) => {
-    // Senin yazdığın kod aynen buraya gelecek
     if (!prayerTimes) return { nextPrayer: '', timeToNextPrayer: '' };
 
     const now = moment();
@@ -164,13 +155,7 @@ export const findNextPrayer = (prayerTimes) => {
     const formattedSeconds = seconds < 10 ? `0${seconds}` : `${seconds}`;
   
     const timeToNextPrayer = `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
-    const timeToNextPrayerWidget = `${formattedHours}:${formattedMinutes}`;
-  
-    // Native modüle güncel veriyi gönder
-    if (EzanDataModule) {
-      EzanDataModule.updateEzanData(nextPrayer, prayerTime, timeToNextPrayerWidget);
-    }
-  
+    
     return { nextPrayer, timeToNextPrayer };
 };
 

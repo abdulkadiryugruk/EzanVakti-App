@@ -64,13 +64,12 @@ struct PrayerEntry: TimelineEntry {
     let targetDate: Date
 }
 
-// MARK: - Widget View (Ana Yönlendirici)
+// MARK: - Widget View (Yönlendirici)
 struct EzanVaktiWidgetEntryView : View {
     var entry: Provider.Entry
     @Environment(\.widgetFamily) var family
 
     var body: some View {
-        // Boyuta göre tasarım seçimi
         switch family {
         case .systemSmall:
             SmallWidgetView(entry: entry)
@@ -82,110 +81,146 @@ struct EzanVaktiWidgetEntryView : View {
     }
 }
 
-// MARK: - 1. KÜÇÜK WIDGET TASARIMI (Eski Yeşil Tasarım + Saniye)
+// MARK: - 1. KÜÇÜK WIDGET (Güncellendi: Daha Kalın Font)
 struct SmallWidgetView: View {
     var entry: PrayerEntry
     
     var body: some View {
-        VStack(spacing: 4) {
-            Text(entry.nextPrayer + " vaktine")
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(.white.opacity(0.9))
+        VStack(spacing: 6) {
+            // Vakit İsmi - ARTITILMIŞ FONT VE KALINLIK
+            Text(entry.nextPrayer)
+                .font(.system(size: 26, weight: .black, design: .rounded)) // .black en kalın fonttur
+                .foregroundColor(.white)
+                .textCase(.uppercase)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
             
-            // Canlı Saniye (Büyük Font)
+            // "vaktine" yazısı
+            Text("vaktine kalan")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.white.opacity(0.8))
+            
+            // Canlı Sayaç
             if #available(iOSApplicationExtension 16.0, *) {
                 Text(entry.targetDate, style: .timer)
-                    .font(.system(size: 32, weight: .bold, design: .rounded)) // Fontu biraz küçülttüm sığsın diye
+                    .font(.system(size: 28, weight: .bold, design: .rounded))
                     .foregroundColor(.white)
-                    .minimumScaleFactor(0.5)
+                    .minimumScaleFactor(0.6)
                     .multilineTextAlignment(.center)
             } else {
-                Text(entry.prayerTime) // Fallback
-                     .font(.system(size: 32, weight: .bold))
+                Text(entry.prayerTime)
+                     .font(.system(size: 28, weight: .bold))
                      .foregroundColor(.white)
             }
             
-            Divider()
-                .background(Color.white.opacity(0.3))
-                .padding(.horizontal, 8)
-            
-            HStack {
-                Image(systemName: "clock.fill")
-                    .font(.system(size: 12))
+            // Alt Saat Bilgisi
+            HStack(spacing: 4) {
+                Image(systemName: "bell.fill") // İkonu değiştirdim
+                    .font(.system(size: 10))
                 Text(entry.prayerTime)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(.system(size: 14, weight: .semibold))
             }
-            .foregroundColor(.white.opacity(0.95))
+            .padding(.top, 4)
+            .foregroundColor(.white.opacity(0.9))
         }
-        .padding(12)
+        .padding()
     }
 }
 
-// MARK: - 2. ORTA WIDGET TASARIMI (Yeni Düzen + Liste)
+// MARK: - 2. ORTA WIDGET (YEPYENİ TASARIM)
 struct MediumWidgetView: View {
     var entry: PrayerEntry
     
+    // Tarihi Formatla (Örn: 7 Şubat)
+    var formattedDate: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(identifier: "tr_TR")
+        formatter.dateFormat = "d MMMM"
+        return formatter.string(from: Date())
+    }
+    
     var body: some View {
-        HStack(spacing: 16) {
-            // --- SOL Taraf (Özet Bilgi) ---
-            VStack(alignment: .leading, spacing: 4) {
-                Text(entry.nextPrayer)
-                    .font(.system(size: 24, weight: .bold))
-                    .foregroundColor(.white)
-                
-                Text(entry.prayerTime)
-                    .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white.opacity(0.8))
+        VStack(alignment: .leading, spacing: 0) {
+            
+            // --- ÜST KISIM (Başlık ve Tarih) ---
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(entry.nextPrayer)
+                        .font(.system(size: 20, weight: .black)) // Kalın Başlık
+                        .foregroundColor(.white)
+                    
+                    Text("vaktine kalan süre")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
                 
                 Spacer()
                 
-                Text("Kalan Süre")
-                    .font(.system(size: 12, weight: .medium))
-                    .foregroundColor(.white.opacity(0.7))
-                
+                // Sağ Üst Köşe (Tarih - Şehir verisi elimizde olmadığı için tarih koyduk)
+                Text(formattedDate)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+            }
+            .padding(.horizontal, 16)
+            .padding(.top, 14)
+            
+            Spacer()
+            
+            // --- ORTA KISIM (Büyük Sayaç) ---
+            HStack {
                 if #available(iOSApplicationExtension 16.0, *) {
                     Text(entry.targetDate, style: .timer)
-                        .font(.system(size: 20, weight: .bold, design: .rounded))
+                        .font(.system(size: 38, weight: .heavy, design: .rounded))
                         .foregroundColor(.white)
+                        .minimumScaleFactor(0.8)
                 } else {
-                    Text("...")
-                        .font(.system(size: 20, weight: .bold))
+                    Text(entry.prayerTime)
+                        .font(.system(size: 38, weight: .heavy))
                         .foregroundColor(.white)
                 }
+                Spacer()
             }
-            .frame(width: 130, alignment: .leading) // Sol tarafın genişliğini sabitledik
+            .padding(.horizontal, 16)
             
-            // Dikey Çizgi
-            Divider()
-                .background(Color.white.opacity(0.3))
+            Spacer()
             
-            // --- SAĞ Taraf (Vakit Listesi) ---
-            VStack(alignment: .trailing, spacing: 0) { // Spacing 0 yaparak sıkıştırdık
+            // --- ALT KISIM (6'lı Vakit Listesi) ---
+            // Kilit ikonları yerine saatler
+            HStack(spacing: 0) {
                 if let allTimes = SharedDataManager.shared.getTodaysPrayerTimes() {
                     let prayers = ["İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı"]
                     
                     ForEach(prayers, id: \.self) { prayer in
-                        HStack {
+                        VStack(spacing: 3) {
+                            // Vakit Adı
                             Text(prayer)
-                                .font(.system(size: 12, weight: entry.nextPrayer == prayer ? .bold : .medium))
-                            Spacer()
+                                .font(.system(size: 10, weight: .medium))
+                                .foregroundColor(entry.nextPrayer == prayer ? .white : .white.opacity(0.6))
+                            
+                            // Saat
                             Text(allTimes[prayer] ?? "--:--")
-                                .font(.system(size: 12, weight: entry.nextPrayer == prayer ? .bold : .regular))
+                                .font(.system(size: 11, weight: entry.nextPrayer == prayer ? .bold : .regular))
+                                .foregroundColor(entry.nextPrayer == prayer ? .white : .white.opacity(0.8))
+                            
+                            // Alt Çizgi/İkon (Aktifse kilit açık gibi, değilse kapalı)
+                            Image(systemName: entry.nextPrayer == prayer ? "lock.open.fill" : "lock.fill")
+                                .font(.system(size: 8))
+                                .foregroundColor(entry.nextPrayer == prayer ? .white : .white.opacity(0.4))
+                                .padding(.top, 2)
                         }
-                        .foregroundColor(entry.nextPrayer == prayer ? .white : .white.opacity(0.7))
-                        .padding(.vertical, 2) // Satır aralığı
-                        .padding(.horizontal, 4)
-                        .background(entry.nextPrayer == prayer ? Color.white.opacity(0.2) : Color.clear) // Aktif vakti vurgula
-                        .cornerRadius(4)
+                        .frame(maxWidth: .infinity) // Eşit dağılım
+                        .padding(.vertical, 8)
+                        // Aktif Olanın Arkaplanı
+                        .background(
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(entry.nextPrayer == prayer ? Color.white.opacity(0.2) : Color.clear)
+                        )
                     }
-                } else {
-                    Text("Liste Yükleniyor...")
-                        .font(.caption)
-                        .foregroundColor(.white)
                 }
             }
+            .padding(.horizontal, 8)
+            .padding(.bottom, 10)
         }
-        .padding(14)
     }
 }
 
@@ -194,12 +229,12 @@ struct MediumWidgetView: View {
 struct EzanVaktiWidget: Widget {
     let kind: String = "EzanVaktiWidget"
 
-    // Ortak Yeşil Gradyan Arka Plan
+    // Tam Senin İstediğin Yeşil
     var backgroundGradient: LinearGradient {
         LinearGradient(
-            gradient: Gradient(colors: [Color(red: 0.2, green: 0.5, blue: 0.3), Color(red: 0.15, green: 0.4, blue: 0.25)]),
-            startPoint: .topLeading,
-            endPoint: .bottomTrailing
+            gradient: Gradient(colors: [Color(hex: "00B16A"), Color(hex: "00945A")]), // Canlı Yeşil
+            startPoint: .top,
+            endPoint: .bottom
         )
     }
 
@@ -216,8 +251,35 @@ struct EzanVaktiWidget: Widget {
             }
         }
         .configurationDisplayName("Ezan Vakti")
-        .description("Namaz vakitlerini takip edin.")
-        .supportedFamilies([.systemSmall, .systemMedium]) // İki boyutu da destekle
+        .description("Namaz vakitleri ve sayaç.")
+        .supportedFamilies([.systemSmall, .systemMedium])
         .contentMarginsDisabled()
+    }
+}
+
+// Hex Renk Desteği
+extension Color {
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RGB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // ARGB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (1, 1, 1, 0)
+        }
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
     }
 }

@@ -1,6 +1,7 @@
-import { NativeModules } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
 
 const { EzanDataModule } = NativeModules;
 const CACHE_KEY = 'prayer_times_cache';
@@ -21,8 +22,14 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
                 console.log('Cache verisi bulundu, API atlanıyor.');
                 
                 if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
-                    EzanDataModule.saveAllPrayerTimes(cache[selectedCity]);
-                }
+    if (Platform.OS === 'ios') {
+        // iOS için şehir ismiyle beraber gönderiyoruz
+        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
+    } else {
+        // Android için (şimdilik) sadece veriyi gönderiyoruz
+        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
+    }
+}
                 return cache[selectedCity][formattedToday];
             }
         }
@@ -54,9 +61,15 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
     if (Object.keys(fullYearData).length > 0) {
         // 1. Native Tarafa Kaydet (Widget için)
         if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
-            EzanDataModule.saveAllPrayerTimes(fullYearData);
-            console.log("1 Yıllık veri Widget'a aktarıldı.");
-        }
+    if (Platform.OS === 'ios') {
+        // iOS: Veri + Şehir
+        EzanDataModule.saveAllPrayerTimes(fullYearData, selectedCity);
+    } else {
+        // Android: Sadece Veri
+        EzanDataModule.saveAllPrayerTimes(fullYearData);
+    }
+    console.log("1 Yıllık veri Widget'a aktarıldı.");
+}
 
         const cleanCache = {
             [selectedCity]: fullYearData

@@ -34,4 +34,14 @@ class SharedDataManager {
     func getNextPrayerTime() -> String? {
         return userDefaults?.string(forKey: "nextPrayerTime")
     }
+
+    // Şehir bilgisini kaydet
+    func saveCity(_ city: String) {
+        userDefaults?.set(city, forKey: "selectedCity")
+    }
+    
+    // Şehir bilgisini oku
+    func getSelectedCity() -> String {
+        return userDefaults?.string(forKey: "selectedCity") ?? "Şehir Seçilmedi"
+    }
 }

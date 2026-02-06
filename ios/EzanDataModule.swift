@@ -6,7 +6,10 @@ import WidgetKit
 class EzanDataModule: NSObject {
   
   @objc
-  func saveAllPrayerTimes(_ dataMap: [String: [String: String]]) {
+  func saveAllPrayerTimes(_ dataMap: [String: [String: String]], city: String) {
+    
+    // 1. Şehri Kaydet (YENİ)
+    SharedDataManager.shared.saveCity(city)
     // Bugünün tarihini al
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"

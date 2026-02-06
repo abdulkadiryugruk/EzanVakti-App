@@ -1,14 +1,14 @@
 import WidgetKit
 import SwiftUI
 
-// MARK: - Timeline Provider (Standart)
+// MARK: - Timeline Provider
 struct Provider: TimelineProvider {
     func placeholder(in context: Context) -> PrayerEntry {
-        PrayerEntry(date: Date(), nextPrayer: "Öğle", prayerTime: "13:23", targetDate: Date().addingTimeInterval(3600))
+        PrayerEntry(date: Date(), nextPrayer: "Öğle", prayerTime: "13:23", targetDate: Date().addingTimeInterval(3600), city: "Denizli")
     }
 
     func getSnapshot(in context: Context, completion: @escaping (PrayerEntry) -> ()) {
-        let entry = PrayerEntry(date: Date(), nextPrayer: "İkindi", prayerTime: "17:08", targetDate: Date().addingTimeInterval(5400))
+        let entry = PrayerEntry(date: Date(), nextPrayer: "İkindi", prayerTime: "17:08", targetDate: Date().addingTimeInterval(5400), city: "İstanbul")
         completion(entry)
     }
 
@@ -17,6 +17,9 @@ struct Provider: TimelineProvider {
         
         let nextName = SharedDataManager.shared.getNextPrayerName() ?? "Vakit"
         let nextTimeStr = SharedDataManager.shared.getNextPrayerTime() ?? "00:00"
+        
+        let city = SharedDataManager.shared.getSelectedCity()
+        
         let targetDate = calculateTargetDate(timeStr: nextTimeStr)
         
         let currentDate = Date()
@@ -26,7 +29,8 @@ struct Provider: TimelineProvider {
             date: currentDate,
             nextPrayer: nextName,
             prayerTime: nextTimeStr,
-            targetDate: targetDate
+            targetDate: targetDate,
+            city: city
         )
         entries.append(entry)
         
@@ -62,6 +66,7 @@ struct PrayerEntry: TimelineEntry {
     let nextPrayer: String
     let prayerTime: String
     let targetDate: Date
+    let city: String
 }
 
 // MARK: - Widget View (Yönlendirici)
@@ -81,8 +86,7 @@ struct EzanVaktiWidgetEntryView : View {
     }
 }
 
-// MARK: - 1. KÜÇÜK WIDGET (Maksimum Font, Minimum Boşluk)
-// MARK: - Small Widget (Küçük Boyut)
+// MARK: - Small Widget
 struct SmallWidgetView: View {
     var entry: PrayerEntry
     
@@ -107,17 +111,14 @@ struct SmallWidgetView: View {
             
             Spacer()
             
-            // Canlı Sayaç (DÜZELTİLDİ: SABİT GENİŞLİK)
+            // Canlı Sayaç
             if #available(iOSApplicationExtension 16.0, *) {
                 Text(entry.targetDate, style: .timer)
-                    // .monospacedDigit() ekledik. Sihir burada! ✨
                     .font(.system(size: 44, weight: .heavy, design: .rounded).monospacedDigit())
                     .foregroundColor(.white)
-                    // ScaleFactor'ü çok düşürmek yerine biraz yüksek tutalım ki gereksiz küçülmesin
                     .minimumScaleFactor(0.6) 
                     .multilineTextAlignment(.center)
                     .lineLimit(1)
-                    // Ekstra güvenlik: Çerçevenin genişliğini sabitleyebilirsin (Opsiyonel ama önerilir)
                     .frame(minWidth: 130) 
             } else {
                 Text(entry.prayerTime)
@@ -128,21 +129,31 @@ struct SmallWidgetView: View {
             Spacer()
             
             // Alt Saat Bilgisi
-            HStack(spacing: 5) {
-                Image(systemName: "alarm.fill")
-                    .font(.system(size: 12))
-                Text(entry.prayerTime)
-                    .font(.system(size: 16, weight: .bold).monospacedDigit()) // Buraya da ekledik
+            VStack(spacing: 1) {
+                
+                // 1. Saat ve Alarm
+                HStack(spacing: 4) {
+                    Image(systemName: "alarm.fill")
+                        .font(.system(size: 11))
+                    Text(entry.prayerTime)
+                        .font(.system(size: 15, weight: .bold).monospacedDigit())
+                }
+                .foregroundColor(.white.opacity(0.95))
+                
+                // 2. Şehir Bilgisi 📍
+                Text(entry.city)
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.white.opacity(0.7))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
             }
-            .foregroundColor(.white.opacity(0.95))
-            .padding(.bottom, 6)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
     }
 }
 
-// MARK: - 2. ORTA WIDGET (%20 vs %16 Mantığı)
+// MARK: - Medium Widget
 struct MediumWidgetView: View {
     var entry: PrayerEntry
     
@@ -168,9 +179,18 @@ struct MediumWidgetView: View {
                         .foregroundColor(.white.opacity(0.8))
                 }
                 Spacer()
-                Text(formattedDate)
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.9))
+                
+                // SAĞ ÜST KÖŞE (Tarih ve Şehir)
+                VStack(alignment: .trailing, spacing: 2) {
+                    Text(formattedDate)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.white.opacity(0.9))
+                    
+                    // ŞEHİR İSMİ 📍
+                    Text(entry.city)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 14)
@@ -198,12 +218,10 @@ struct MediumWidgetView: View {
             // --- ALT KISIM (%20 - %16 Dağılımı) ---
             GeometryReader { geometry in
                 let totalWidth = geometry.size.width
-                // Boşlukları (spacing) hesaba katmadan ham genişlik hesabı
-                // Spacing 2 birim x 5 aralık = 10 birim kayıp, onu göz ardı edebiliriz veya düşebiliriz.
                 let activeWidth = totalWidth * 0.20 // %20
                 let passiveWidth = totalWidth * 0.16 // %16
                 
-                HStack(spacing: 0) { // Spacing 0 yapıp padding ile çözeceğiz
+                HStack(spacing: 0) {
                     if let allTimes = SharedDataManager.shared.getTodaysPrayerTimes() {
                         let prayers = ["İmsak", "Güneş", "Öğle", "İkindi", "Akşam", "Yatsı"]
                         
@@ -211,20 +229,20 @@ struct MediumWidgetView: View {
                             let isSelected = entry.nextPrayer == prayer
                             
                             VStack(spacing: 1) {
-                                // Vakit Adı (Seçiliyse BÜYÜK)
+                                // Vakit Adı
                                 Text(prayer)
                                     .font(.system(size: isSelected ? 13 : 12, weight: isSelected ? .heavy : .medium))
                                     .foregroundColor(isSelected ? .white : .white.opacity(0.7))
                                     .lineLimit(1)
                                     .minimumScaleFactor(0.8)
                                 
-                                // Saat (Seçiliyse BÜYÜK)
+                                // Saat
                                 Text(allTimes[prayer] ?? "--:--")
                                     .font(.system(size: isSelected ? 14 : 12, weight: isSelected ? .black : .regular))
                                     .foregroundColor(isSelected ? .white : .white.opacity(0.9))
                                     .minimumScaleFactor(0.8)
                             }
-                            // GENİŞLİK AYARI (Matematiksel Dağılım)
+                            // GENİŞLİK AYARI
                             .frame(width: isSelected ? activeWidth : passiveWidth)
                             .padding(.vertical, 8)
                             .background(
@@ -235,7 +253,7 @@ struct MediumWidgetView: View {
                     }
                 }
             }
-            .frame(height: 50) // Alt bar için sabit yükseklik
+            .frame(height: 50)
             .padding(.bottom, 8)
             .padding(.horizontal, 10)
         }
@@ -247,21 +265,9 @@ struct MediumWidgetView: View {
 struct EzanVaktiWidget: Widget {
     let kind: String = "EzanVaktiWidget"
 
-    // --- RENK SEÇENEKLERİ ---
-    // Hangisini kullanmak istersen diğerlerini yorum satırı yap (//), istediğini aç.
-    
-    // 1. SEÇENEK: Derin Orman (Senin tonlarının koyusu - Doğal)
-     var startColor = Color(hex: "1A331D"); var endColor = Color(hex: "2D5D34")
-
-    // 2. SEÇENEK: Gece Yeşili (Midnight Green - Premium & Asil) 
-    // var startColor = Color(hex: "0F2E28"); var endColor = Color(hex: "1F4E43")
-
-    // 3. SEÇENEK: Saf Zümrüt (Canlı ve Koyu)
-    // var startColor = Color(hex: "09391F"); var endColor = Color(hex: "166838")
-
-    // 4. SEÇENEK: Kutsal Yeşil (Klasik ve Ağır)
-    // var startColor = Color(hex: "052618"); var endColor = Color(hex: "0D452B")
-    // -------------------------
+    // 1. SEÇENEK: Derin Orman (Senin seçtiğin renkler)
+    var startColor = Color(hex: "1A331D")
+    var endColor = Color(hex: "2D5D34")
 
     var backgroundGradient: LinearGradient {
         LinearGradient(
@@ -290,6 +296,7 @@ struct EzanVaktiWidget: Widget {
     }
 }
 
+// ⚠️ ÖNEMLİ: Bu extension dosyanın EN ALTINDA, struct'ların dışındadır.
 // Hex Renk Desteği
 extension Color {
     init(hex: String) {

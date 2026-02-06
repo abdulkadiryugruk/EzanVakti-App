@@ -5,6 +5,7 @@ import {
   ImageBackground,
   StyleSheet,
   Dimensions,
+  Platform,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -33,7 +34,7 @@ const Header = ({
             style={styles.timeLeftText}
             adjustsFontSizeToFit
             numberOfLines={1}
-            minimumFontScale={0.4}
+            minimumFontScale={0.5}
             maxFontSizeMultiplier={1.2}
           >
             {timeToNextPrayer}
@@ -75,17 +76,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   timeContainer: {
-    width: '96%', // Container'ın %96'sını kapla - Daha geniş
+    width: SCREEN_WIDTH * 0.92, // Sabit genişlik
+    height: SCREEN_WIDTH * 0.22, // ⭐ Sabit yükseklik - header yüksekliği sabitlenir
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden', // Taşmaları önle
   },
   timeLeftText: {
     color: '#FFFFFF',
     fontSize: SCREEN_WIDTH * 0.25, // Ekran genişliğinin %25'si (dinamik)
     fontWeight: '800',
+    fontVariant: ['tabular-nums'], // ⭐ iOS: Her rakam aynı genişlikte (monospace)
     letterSpacing: SCREEN_WIDTH * 0.012, // Ekran boyutuna göre letter spacing
-    marginVertical: -5,
     textAlign: 'center',
+    includeFontPadding: false, // Android: Ekstra font padding'i kaldır
+    textAlignVertical: 'center', // Android: Dikey hizalama
+    ...(Platform.OS === 'android' && {
+      // Android'de ek stabilite için
+      lineHeight: SCREEN_WIDTH * 0.22,
+    }),
   },
   infoRow: {
     flexDirection: 'row',

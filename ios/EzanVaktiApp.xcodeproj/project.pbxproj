@@ -14,7 +14,7 @@
 		96267F712F365972006A0893 /* WidgetKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96267F702F365972006A0893 /* WidgetKit.framework */; };
 		96267F732F365972006A0893 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 96267F722F365972006A0893 /* SwiftUI.framework */; };
 		96267F822F365974006A0893 /* EzanVaktiWidgetExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 96267F6F2F365972006A0893 /* EzanVaktiWidgetExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
-		9689B4162F36619D0027407F /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9689B4152F36619D0027407F /* SharedDataManager.swift */; };
+		9673E52E2F3BA7BF00DBC0CF /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9689B4152F36619D0027407F /* SharedDataManager.swift */; };
 		9689B4172F36619D0027407F /* SharedDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9689B4152F36619D0027407F /* SharedDataManager.swift */; };
 		9689B41B2F366CDC0027407F /* EzanDataModule.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9689B4192F366CDC0027407F /* EzanDataModule.swift */; };
 		9689B41C2F366CDC0027407F /* EzanDataModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 9689B4182F366CDC0027407F /* EzanDataModule.m */; };
@@ -374,7 +374,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				9689B4162F36619D0027407F /* SharedDataManager.swift in Sources */,
+				9673E52E2F3BA7BF00DBC0CF /* SharedDataManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -412,7 +412,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abdulkadir.EzanVakti;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.abdulkadir.EzanVakti;
 				PRODUCT_NAME = EzanVakti;
 				SWIFT_OBJC_BRIDGING_HEADER = "EzanVakti-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -443,7 +444,8 @@
 					"-ObjC",
 					"-lc++",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "org.reactjs.native.example.$(PRODUCT_NAME:rfc1034identifier)";
+				PRODUCT_BUNDLE_IDENTIFIER = com.abdulkadir.EzanVakti;
+				"PRODUCT_BUNDLE_IDENTIFIER[sdk=iphoneos*]" = com.abdulkadir.EzanVakti;
 				PRODUCT_NAME = EzanVakti;
 				SWIFT_OBJC_BRIDGING_HEADER = "EzanVakti-Bridging-Header.h";
 				SWIFT_VERSION = 5.0;
@@ -630,7 +632,7 @@
 				MARKETING_VERSION = 1.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.EzanVakti.EzanVaktiWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abdulkadir.EzanVakti.EzanVaktiWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -677,7 +679,7 @@
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MARKETING_VERSION = 1.0;
 				MTL_FAST_MATH = YES;
-				PRODUCT_BUNDLE_IDENTIFIER = org.reactjs.native.example.EzanVakti.EzanVaktiWidget;
+				PRODUCT_BUNDLE_IDENTIFIER = com.abdulkadir.EzanVakti.EzanVaktiWidget;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

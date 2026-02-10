@@ -5,11 +5,13 @@ import WidgetKit
 @objc(EzanDataModule)
 class EzanDataModule: NSObject {
   
+  // Ana fonksiyon: Tüm yıllık veriyi al, bugünkünü işle
   @objc
   func saveAllPrayerTimes(_ dataMap: [String: [String: String]], city: String) {
     
-    // 1. Şehri Kaydet (YENİ)
+    // Şehri kaydet
     SharedDataManager.shared.saveCity(city)
+    
     // Bugünün tarihini al
     let formatter = DateFormatter()
     formatter.dateFormat = "yyyy-MM-dd"
@@ -31,13 +33,42 @@ class EzanDataModule: NSObject {
       // Sıradaki vakti hesapla ve kaydet
       if let nextPrayer = findNextPrayer(from: formattedTimes) {
         SharedDataManager.shared.saveNextPrayer(name: nextPrayer.name, time: nextPrayer.time)
+        print("📍 Next Prayer: \(nextPrayer.name) at \(nextPrayer.time)")
       }
       
       // Widget'ı güncelle
       WidgetCenter.shared.reloadAllTimelines()
       
       print("✅ iOS Widget'a veri aktarıldı: \(todayKey)")
+      print("🌍 Şehir: \(city)")
+      print("📦 Bugünün vakitleri: \(formattedTimes)")
+    } else {
+      print("❌ Bugünün tarihi bulunamadı: \(todayKey)")
     }
+  }
+  
+  // YENİ: Bir sonraki vakti manuel kaydet
+  @objc
+  func saveNextPrayer(_ name: String, time: String) {
+    SharedDataManager.shared.saveNextPrayer(name: name, time: time)
+    WidgetCenter.shared.reloadAllTimelines()
+    print("✅ Next Prayer kaydedildi: \(name) at \(time)")
+  }
+  
+  // YENİ: Şehri manuel kaydet
+  @objc
+  func saveCity(_ city: String) {
+    SharedDataManager.shared.saveCity(city)
+    WidgetCenter.shared.reloadAllTimelines()
+    print("✅ Şehir kaydedildi: \(city)")
+  }
+  
+  // YENİ: Bugünün vakitlerini manuel kaydet
+  @objc
+  func saveTodaysPrayerTimes(_ times: [String: String]) {
+    SharedDataManager.shared.saveTodaysPrayerTimes(times)
+    WidgetCenter.shared.reloadAllTimelines()
+    print("✅ Bugünün vakitleri kaydedildi: \(times)")
   }
   
   @objc

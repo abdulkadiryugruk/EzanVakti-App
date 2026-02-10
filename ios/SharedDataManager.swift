@@ -4,7 +4,7 @@ class SharedDataManager {
     static let shared = SharedDataManager()
     
     // App Group ID'niz
-    private let appGroupID = "group.com.ezanvakti.shared"
+    private let appGroupID = "group.com.ezanvakti.shared.W5ZJ4W5TN"
     
     private var userDefaults: UserDefaults? {
         return UserDefaults(suiteName: appGroupID)

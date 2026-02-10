@@ -2,7 +2,6 @@ import { NativeModules, Platform } from 'react-native';
 import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-
 const { EzanDataModule } = NativeModules;
 const CACHE_KEY = 'prayer_times_cache';
 
@@ -21,15 +20,43 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
             if (cache[selectedCity] && cache[selectedCity][formattedToday]) {
                 console.log('Cache verisi bulundu, API atlanıyor.');
                 
+                // ✅ DÜZELTME: Widget'a bugünün verisini gönder
                 if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
-    if (Platform.OS === 'ios') {
-        // iOS için şehir ismiyle beraber gönderiyoruz
-        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
-    } else {
-        // Android için (şimdilik) sadece veriyi gönderiyoruz
-        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
-    }
-}
+                    const todayData = cache[selectedCity][formattedToday];
+                    
+                    // Bugünün vakitlerini düzenle
+                    const todaysPrayerTimes = {
+                        "İmsak": todayData.Fajr,
+                        "Güneş": todayData.Sunrise,
+                        "Öğle": todayData.Dhuhr,
+                        "İkindi": todayData.Asr,
+                        "Akşam": todayData.Maghrib,
+                        "Yatsı": todayData.Isha
+                    };
+                    
+                    // Bir sonraki vakti bul
+                    const { nextPrayer, timeToNextPrayer } = findNextPrayer(todayData);
+                    const nextPrayerTime = getNextPrayerTime(todayData, nextPrayer);
+                    
+                    console.log('📦 Widget\'a gönderilecek veriler:', {
+                        nextPrayerName: nextPrayer,
+                        nextPrayerTime: nextPrayerTime,
+                        selectedCity: selectedCity,
+                        todaysPrayerTimes: todaysPrayerTimes
+                    });
+                    
+                    if (Platform.OS === 'ios') {
+                        // iOS için ayrı ayrı kaydet
+                        EzanDataModule.saveNextPrayer(nextPrayer, nextPrayerTime);
+                        EzanDataModule.saveCity(selectedCity);
+                        EzanDataModule.saveTodaysPrayerTimes(todaysPrayerTimes);
+                        console.log('✅ iOS Widget\'a veri aktarıldı:', formattedToday);
+                    } else {
+                        // Android için tüm veriyi gönder
+                        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
+                    }
+                }
+                
                 return cache[selectedCity][formattedToday];
             }
         }
@@ -59,17 +86,40 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
     });
 
     if (Object.keys(fullYearData).length > 0) {
-        // 1. Native Tarafa Kaydet (Widget için)
-        if (EzanDataModule && EzanDataModule.saveAllPrayerTimes) {
-    if (Platform.OS === 'ios') {
-        // iOS: Veri + Şehir
-        EzanDataModule.saveAllPrayerTimes(fullYearData, selectedCity);
-    } else {
-        // Android: Sadece Veri
-        EzanDataModule.saveAllPrayerTimes(fullYearData);
-    }
-    console.log("1 Yıllık veri Widget'a aktarıldı.");
-}
+        // ✅ DÜZELTME: Widget'a bugünün verisini gönder
+        if (EzanDataModule) {
+            const todayData = fullYearData[formattedToday];
+            
+            if (todayData) {
+                const todaysPrayerTimes = {
+                    "İmsak": todayData.Fajr,
+                    "Güneş": todayData.Sunrise,
+                    "Öğle": todayData.Dhuhr,
+                    "İkindi": todayData.Asr,
+                    "Akşam": todayData.Maghrib,
+                    "Yatsı": todayData.Isha
+                };
+                
+                const { nextPrayer } = findNextPrayer(todayData);
+                const nextPrayerTime = getNextPrayerTime(todayData, nextPrayer);
+                
+                console.log('📦 Widget\'a gönderilecek veriler:', {
+                    nextPrayerName: nextPrayer,
+                    nextPrayerTime: nextPrayerTime,
+                    selectedCity: selectedCity,
+                    todaysPrayerTimes: todaysPrayerTimes
+                });
+                
+                if (Platform.OS === 'ios') {
+                    EzanDataModule.saveNextPrayer(nextPrayer, nextPrayerTime);
+                    EzanDataModule.saveCity(selectedCity);
+                    EzanDataModule.saveTodaysPrayerTimes(todaysPrayerTimes);
+                    console.log('✅ iOS Widget\'a veri aktarıldı:', formattedToday);
+                } else {
+                    EzanDataModule.saveAllPrayerTimes(fullYearData);
+                }
+            }
+        }
 
         const cleanCache = {
             [selectedCity]: fullYearData
@@ -84,6 +134,21 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
     console.error('fetchPrayerTimes hatası:', error);
     return null;
   }
+};
+
+// Yardımcı fonksiyon: Bir sonraki namaz vaktinin saatini al
+const getNextPrayerTime = (prayerTimes, prayerName) => {
+    const mapping = {
+        'İmsak': 'Fajr',
+        'Güneş': 'Sunrise',
+        'Öğle': 'Dhuhr',
+        'İkindi': 'Asr',
+        'Akşam': 'Maghrib',
+        'Yatsı': 'Isha'
+    };
+    
+    const apiKey = mapping[prayerName];
+    return prayerTimes[apiKey] || '00:00';
 };
 
 const fetchMonthData = async (city, year, month) => {

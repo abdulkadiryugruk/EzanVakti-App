@@ -529,6 +529,16 @@ const RamadanScreen = () => {
           mapCenterPosition={mapCenter}
           zoom={15}
           mapMarkers={getMapMarkers()}
+          mapLayers={[
+            {
+              baseLayerName: 'OpenStreetMap',
+              baseLayerIsSelected: true,
+              url: colors.background === '#000' || colors.background === '#121212' 
+                ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' // Dark Mode
+                : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', // Light Mode
+              attribution: '&copy; OpenStreetMap contributors'
+            }
+          ]}
           onMessageReceived={onMessageReceived}
           doDebug={false}
         />
@@ -621,7 +631,9 @@ const RamadanScreen = () => {
         <View style={styles.centeredView}>
           <View style={[styles.modalView, { backgroundColor: colors.card }]}>
             <ScrollView showsVerticalScrollIndicator={false}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>🕌 Cami Detayları</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  {selectedMosque?.name || '🕌 Cami Detayları'}
+              </Text>
               
               {selectedMosque && userLocation && (
                   <Text style={{textAlign: 'center', color: colors.textSecondary, marginBottom: 10, fontWeight: 'bold'}}>

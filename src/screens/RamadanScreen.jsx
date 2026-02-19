@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, Platform, ActivityIndicator, Alert, TouchableOpacity, Modal, TextInput, ScrollView, Dimensions } from 'react-native';
+import LoadingScreen from '../components/LoadingScreen';
+import { View, Text, StyleSheet, Platform, ActivityIndicator, Alert, TouchableOpacity, Modal, TextInput, ScrollView, Dimensions, Linking, FlatList } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import Geolocation from 'react-native-geolocation-service';
@@ -58,7 +58,7 @@ const calcDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 const RamadanScreen = () => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [userLocation, setUserLocation] = useState(null);
   const [locationSource, setLocationSource] = useState('gps'); // 'gps' veya 'city'
@@ -71,6 +71,9 @@ const RamadanScreen = () => {
   const [selectedMosque, setSelectedMosque] = useState(null);
   const [modalVisible, setModalVisible] = useState(false);
   const [loadingMosques, setLoadingMosques] = useState(false);
+  const [searchQuery, setSearchQuery] = useState(''); // Search state
+  const [initialMosqueData, setInitialMosqueData] = useState(null); // For unsaved changes check
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false); // Custom confirmation modal
 
   // Edit Modal State
   const [editName, setEditName] = useState('');
@@ -113,6 +116,8 @@ const RamadanScreen = () => {
         loadCityMosques(selectedCity);
     }
   }, [selectedCity]);
+
+
 
   const loadSavedData = async () => {
     try {
@@ -189,7 +194,8 @@ const RamadanScreen = () => {
 
   const loadMosquesNearLocation = async (lat, lng) => {
       setLoadingMosques(true);
-      const mosques = await getMosquesByLocation(lat, lng);
+      // Radius changed to 10km (10000 meters) as requested
+      const mosques = await getMosquesByLocation(lat, lng, 10000);
       setCityMosques(mosques);
       setLoadingMosques(false);
   };
@@ -204,6 +210,7 @@ const RamadanScreen = () => {
 
     const cityCoords = CITY_COORDINATES[selectedCity];
     if (cityCoords) {
+        // Set user location to city center so markers show up and distance can be calculated relative to city center
         setUserLocation({ latitude: cityCoords.lat, longitude: cityCoords.lng });
         setLocationSource('city');
     } else {
@@ -214,12 +221,7 @@ const RamadanScreen = () => {
   };
 
   if (loading || !userLocation) {
-      return (
-          <View style={[styles.container, { backgroundColor: colors.background }]}>
-              <ActivityIndicator size="large" color={colors.primary} />
-              <Text style={{ marginTop: 10, color: colors.text }}>Konum belirleniyor...</Text>
-          </View>
-      );
+      return <LoadingScreen message="Konum Belirleniyor..." />;
   }
 
 
@@ -245,19 +247,8 @@ const RamadanScreen = () => {
   const getMapMarkers = () => {
       const markers = [];
       
-      // User Marker
-      if (userLocation) {
-          markers.push({
-            id: 'userLocation',
-            position: { lat: userLocation.latitude, lng: userLocation.longitude },
-            // Yellow Standing Man Icon
-            icon: 'https://img.icons8.com/ios-filled/100/FFD700/standing-man.png', 
-            size: [40, 40],
-            // Experimental: Try to prevent clustering for this marker if library supports it
-            cluster: false, 
-          });
-      }
-
+      // User Marker is handled by ownPositionMarker prop to try and avoid clustering
+      
       // Mosque Markers
       cityMosques.forEach(mosque => {
           const merged = getMergedMosque(mosque);
@@ -308,6 +299,32 @@ const RamadanScreen = () => {
       getCurrentRamazanDay()?.toString() || '1'
     );
     setModalVisible(true);
+  };
+
+  const handleCloseModal = () => {
+    // Refs: https://reactnative.dev/
+    // Check for specific fields as requested: Visited, Note, Rating
+    // We normalize values to ensure safe comparison (e.g. null vs empty string)
+    
+    const currentNote = editNote ? editNote.trim() : '';
+    const initialNote = initialMosqueData?.note ? initialMosqueData.note.trim() : '';
+    
+    const currentVisited = !!editVisited;
+    const initialVisited = !!initialMosqueData?.visited;
+    
+    const currentRating = editImamRating || 0;
+    const initialRating = initialMosqueData?.imamRating || 0;
+
+    // Trigger only if there are actual changes in these priority fields
+    const hasChanges = (currentVisited !== initialVisited) || 
+                       (currentNote !== initialNote) || 
+                       (currentRating !== initialRating);
+
+    if (hasChanges) {
+        setConfirmModalVisible(true);
+    } else {
+        setModalVisible(false);
+    }
   };
 
   const saveMosqueDetails = async () => {
@@ -406,26 +423,76 @@ const RamadanScreen = () => {
 
     // Sort by: Visited first, then distance (if available), then name
     return data.sort((a, b) => {
+        // For 'all' filter, User wants nearest to farthest
+        if (listFilter === 'all' && userLocation) {
+             const da = calcDistanceValue(userLocation.latitude, userLocation.longitude, a.coordinate.latitude, a.coordinate.longitude);
+             const db = calcDistanceValue(userLocation.latitude, userLocation.longitude, b.coordinate.latitude, b.coordinate.longitude);
+             return da - db;
+        }
+
         if (a.visited !== b.visited) return a.visited ? -1 : 1;
         
-        // Distance sort (optional, simple approx)
+        // Secondary sorts
         if (userLocation) {
-            const da = calcDistance(userLocation.latitude, userLocation.longitude, a.coordinate.latitude, a.coordinate.longitude);
-            const db = calcDistance(userLocation.latitude, userLocation.longitude, b.coordinate.latitude, b.coordinate.longitude);
-            // calcDistance returns string "X km", we need number comparison, reusing logic might be expensive in sort, 
-            // but for <50 items it's fine. For optimized, pre-calculate distance.
-            // Let's just sort by name for simplicity or ramazanDay if visited
-            if (a.visited && b.visited) {
-                 return (b.ramazanDay || 0) - (a.ramazanDay || 0);
-            }
+            const da = calcDistanceValue(userLocation.latitude, userLocation.longitude, a.coordinate.latitude, a.coordinate.longitude);
+            const db = calcDistanceValue(userLocation.latitude, userLocation.longitude, b.coordinate.latitude, b.coordinate.longitude);
+            if (Math.abs(da - db) > 0.1) return da - db;
         }
         return 0;
     });
   };
 
+  // Helper for numeric distance
+  const calcDistanceValue = (lat1, lon1, lat2, lon2) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return 999999;
+    const R = 6371; 
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c; 
+  };
+
   // ─── RENDER: Liste ──────────────────────────────────────────────────────
-  const renderList = () => (
+  const renderList = () => {
+    // Filter by search query
+    const data = getListData();
+    const filteredData = data.filter(m => 
+        m.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+
+    return (
     <View style={{ flex: 1, padding: 10 }}>
+       {/* Search Bar */}
+      <View style={{ 
+          flexDirection: 'row', 
+          alignItems: 'center', 
+          backgroundColor: colors.card, 
+          borderRadius: 8, 
+          paddingHorizontal: 10,
+          marginBottom: 10,
+          borderWidth: 1,
+          borderColor: colors.border
+      }}>
+          <Icon name="magnify" size={24} color={colors.textSecondary} />
+          <TextInput 
+              style={{ flex: 1, padding: 10, color: colors.text }}
+              placeholder="Cami ara..."
+              placeholderTextColor={colors.textSecondary}
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+          />
+          {searchQuery.length > 0 && (
+              <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <Icon name="close" size={20} color={colors.textSecondary} />
+              </TouchableOpacity>
+          )}
+      </View>
+
       <View style={[styles.statsCard, { backgroundColor: colors.card }]}>
         <View style={styles.statItem}>
           <Text style={[styles.statNum, { color: colors.primary }]}>{visitedCount}</Text>
@@ -456,8 +523,17 @@ const RamadanScreen = () => {
         ))}
       </View>
 
-      <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
-        {getListData().map((item) => {
+      <FlatList
+        data={filteredData}
+        keyExtractor={(item) => item.id.toString()}
+        contentContainerStyle={{ paddingBottom: 100 }}
+        initialNumToRender={10}
+        maxToRenderPerBatch={10}
+        windowSize={5}
+        ListEmptyComponent={
+            <Text style={{textAlign: 'center', marginTop: 20, color: colors.textSecondary}}>Kayıt bulunamadı.</Text>
+        }
+        renderItem={({ item }) => {
           const dist = userLocation
             ? calcDistance(
                 userLocation.latitude, userLocation.longitude,
@@ -467,45 +543,79 @@ const RamadanScreen = () => {
             
           return (
             <TouchableOpacity
-              key={item.id}
-              style={[styles.listItem, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => openMosqueModal(item)}
+              style={[
+                styles.listItem, 
+                { 
+                  backgroundColor: colors.card,
+                  borderBottomColor: colors.border,
+                  borderBottomWidth: 0.5,
+                  borderRadius: 12, // Match PrayerItems borderRadius
+                  marginVertical: 4, // Match PrayerItems spacing
+                  elevation: 1, // Match PrayerItems elevation
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 1 },
+                  shadowOpacity: 0.08,
+                  shadowRadius: 1,
+                  paddingHorizontal: 12,
+                  paddingVertical: 12,
+                  borderColor: 'transparent' // Remove old border
+                }
+              ]}
+              onPress={() => {
+                  // Navigate to Map and Open Modal
+                  setViewMode('map');
+                  setMapCenter({ lat: item.coordinate.latitude, lng: item.coordinate.longitude });
+                  // Small delay to ensure map renders before modal
+                  setTimeout(() => {
+                      openMosqueModal(item);
+                  }, 100);
+              }}
             >
-              <View style={styles.listItemHeader}>
-                <Text style={{fontSize: 24}}>{item.visited ? '✅' : '🕌'}</Text>
-                <View style={{flex: 1, marginLeft: 10}}>
-                   <Text style={[styles.listItemTitle, { color: colors.text }]} numberOfLines={1}>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                {/* Icon Container similar to PrayerItems */}
+                <View style={{
+                    width: 40, height: 40, borderRadius: 20,
+                    backgroundColor: item.visited ? colors.success + '20' : colors.primary + '15',
+                    alignItems: 'center', justifyContent: 'center',
+                    marginRight: 12
+                }}>
+                    <Icon name={item.visited ? 'check-decagram' : 'mosque'} size={24} color={item.visited ? colors.success : colors.primary} />
+                </View>
+
+                {/* Text Container */}
+                <View style={{ flex: 1 }}>
+                   <Text style={[styles.listItemTitle, { color: colors.text, fontSize: 16, fontWeight: '700', marginBottom: 2 }]} numberOfLines={1}>
                       {item.name || '—'}
                    </Text>
-                   {dist && <Text style={{ color: colors.textSecondary, fontSize: 12 }}>{dist} mesafede</Text>}
+                   <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                       {dist && <Text style={{ color: colors.textSecondary, fontSize: 13, marginRight: 8 }}>📍 {dist}</Text>}
+                       {item.imamRating > 0 && (
+                            <View style={{flexDirection:'row', alignItems:'center'}}>
+                                <Icon name='star' size={14} color="#FFD700" />
+                                <Text style={{color: colors.textSecondary, fontSize: 13, marginLeft: 2}}>{item.imamRating}</Text>
+                            </View>
+                       )}
+                   </View>
                 </View>
-                {item.ramazanDay && item.visited && (
-                    <View style={[styles.listDayBadge, { backgroundColor: colors.primary }]}>
-                      <Text style={styles.listDayText}>{item.ramazanDay}. Gün</Text>
-                    </View>
-                )}
-              </View>
-              
-              <View style={{ flexDirection: 'row', marginTop: 8, gap: 12, alignItems: 'center' }}>
-                {item.imamRating > 0 && (
-                    <View style={{flexDirection:'row', alignItems:'center'}}>
-                         <Icon name='star' size={14} color="#FFD700" />
-                         <Text style={{color: colors.text, fontSize: 13, marginLeft: 2, fontWeight: 'bold'}}>{item.imamRating}/10</Text>
-                    </View>
-                )}
-                {item.teravihEndTime ? (
-                     <Text style={{ color: colors.textSecondary, fontSize: 13 }}>🕐 {item.teravihEndTime}</Text>
-                ) : null}
+
+                {/* Right Side Info (Time or Day) */}
+                <View style={{alignItems: 'flex-end'}}>
+                    {item.teravihEndTime && (
+                         <Text style={{ color: colors.textSecondary, fontSize: 13, marginBottom: 4 }}>🕐 {item.teravihEndTime}</Text>
+                    )}
+                    {item.ramazanDay && item.visited && (
+                        <View style={{ backgroundColor: colors.primary + '20', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 4 }}>
+                          <Text style={{ color: colors.primary, fontSize: 11, fontWeight: 'bold' }}>{item.ramazanDay}. Gün</Text>
+                        </View>
+                    )}
+                </View>
               </View>
             </TouchableOpacity>
           );
-        })}
-        {getListData().length === 0 && (
-            <Text style={{textAlign: 'center', marginTop: 20, color: colors.textSecondary}}>Kayıt bulunamadı.</Text>
-        )}
-      </ScrollView>
+        }}
+      />
     </View>
-  );
+  )};
 
   return (
     <View style={styles.container}>
@@ -533,12 +643,20 @@ const RamadanScreen = () => {
             {
               baseLayerName: 'OpenStreetMap',
               baseLayerIsSelected: true,
-              url: colors.background === '#000' || colors.background === '#121212' 
+              url: isDarkMode 
                 ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png' // Dark Mode
                 : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', // Light Mode
               attribution: '&copy; OpenStreetMap contributors'
             }
           ]}
+          // Separate prop for user location to avoid clustering
+          ownPositionMarker={userLocation ? {
+              id: 'userLocation',
+              position: { lat: userLocation.latitude, lng: userLocation.longitude },
+              icon: 'https://img.icons8.com/ios-filled/100/FFD700/standing-man.png', 
+              size: [40, 40],
+              animation: { duration: 0.5, delay: 0, interp: 'linear', type: 'move' } // Optional animation
+          } : null}
           onMessageReceived={onMessageReceived}
           doDebug={false}
         />
@@ -549,12 +667,7 @@ const RamadanScreen = () => {
            </Text>
         </View>
 
-        <TouchableOpacity 
-            style={[styles.addButton, { backgroundColor: '#27ae60' }]}
-            onPress={() => setAddModalVisible(true)}
-        >
-            <Icon name="plus" size={24} color="#fff" />
-        </TouchableOpacity>
+        {/* Cami Ekle Button Removed as per request */}
 
         <TouchableOpacity 
             style={[styles.centerButton, { backgroundColor: colors.card }]}
@@ -626,10 +739,57 @@ const RamadanScreen = () => {
         </View>
       </Modal>
 
+      <Modal animationType='fade' transparent visible={confirmModalVisible}
+        onRequestClose={() => setConfirmModalVisible(false)}>
+        <View style={{flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center'}}>
+          <View style={{width: '80%', backgroundColor: colors.card, borderRadius: 16, padding: 20, alignItems: 'center'}}>
+             <View style={{backgroundColor: '#FFA72620', padding: 16, borderRadius: 40, marginBottom: 16}}>
+                <Icon name='alert-circle-outline' size={40} color='#FFA726'/>
+             </View>
+             
+             <Text style={{fontSize: 18, fontWeight: 'bold', color: colors.text, marginBottom: 8}}>Kaydedilmemiş Değişiklikler</Text>
+             <Text style={{fontSize: 14, color: colors.textSecondary, textAlign: 'center', marginBottom: 24}}>
+               Girdiğiniz bilgiler kaydedilmedi. Çıkmak istediğinize emin misiniz?
+             </Text>
+
+             <View style={{width: '100%', gap: 10}}>
+                <TouchableOpacity style={{backgroundColor: '#27ae60', padding: 12, borderRadius: 8, alignItems: 'center'}}
+                   onPress={() => {
+                       setConfirmModalVisible(false);
+                       saveMosqueDetails();
+                   }}>
+                    <Text style={{color: '#fff', fontWeight: 'bold', fontSize: 16}}>Kaydet ve Çık</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={{backgroundColor: colors.background, padding: 12, borderRadius: 8, alignItems: 'center', borderWidth: 1, borderColor: colors.border}}
+                   onPress={() => {
+                       setConfirmModalVisible(false);
+                       setModalVisible(false);
+                   }}>
+                    <Text style={{color: '#EF5350', fontWeight: 'bold', fontSize: 16}}>Değişiklikleri Sil</Text>
+                </TouchableOpacity>
+                
+                <TouchableOpacity style={{padding: 12, alignItems: 'center'}}
+                   onPress={() => setConfirmModalVisible(false)}>
+                    <Text style={{color: colors.textSecondary, fontSize: 16}}>Vazgeç</Text>
+                </TouchableOpacity>
+             </View>
+          </View>
+        </View>
+      </Modal>
+
       <Modal animationType='slide' transparent visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}>
-        <View style={styles.centeredView}>
-          <View style={[styles.modalView, { backgroundColor: colors.card }]}>
+        onRequestClose={handleCloseModal}>
+        <TouchableOpacity 
+            style={styles.centeredView} 
+            activeOpacity={1} 
+            onPress={handleCloseModal}
+        >
+          <TouchableOpacity 
+            activeOpacity={1} 
+            style={[styles.modalView, { backgroundColor: colors.card }]}
+            onPress={(e) => e.stopPropagation()}
+          >
             <ScrollView showsVerticalScrollIndicator={false}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>
                   {selectedMosque?.name || '🕌 Cami Detayları'}
@@ -690,7 +850,25 @@ const RamadanScreen = () => {
                 placeholderTextColor={colors.textSecondary} multiline numberOfLines={4} />
 
               <View style={styles.modalButtons}>
-                <TouchableOpacity style={[styles.btn, { backgroundColor: colors.textSecondary }]} onPress={() => setModalVisible(false)}>
+                <TouchableOpacity style={[styles.btn, { backgroundColor: colors.info, marginRight: 8 }]} onPress={() => {
+                    const scheme = Platform.select({ ios: 'maps:0,0?q=', android: 'geo:0,0?q=' });
+                    const latLng = `${selectedMosque.coordinate.latitude},${selectedMosque.coordinate.longitude}`;
+                    const label = selectedMosque.name;
+                    const url = Platform.select({
+                      ios: `${scheme}${label}@${latLng}`,
+                      android: `${scheme}${latLng}(${label})`
+                    });
+                     // Fallback to Google Maps web if scheme fails or for simpler deep linking
+                    const googleUrl = `https://www.google.com/maps/search/?api=1&query=${selectedMosque.coordinate.latitude},${selectedMosque.coordinate.longitude}`;
+                    Linking.canOpenURL(url).then(supported => {
+                        if (supported) Linking.openURL(url);
+                        else Linking.openURL(googleUrl);
+                    });
+                }}>
+                  <Icon name='directions' size={18} color='#fff' /><Text style={styles.btnText}> Yol Tarifi</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity style={[styles.btn, { backgroundColor: colors.textSecondary }]} onPress={handleCloseModal}>
                   <Text style={styles.btnText}>İptal</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={[styles.btn, { backgroundColor: '#27ae60' }]} onPress={saveMosqueDetails}>
@@ -698,8 +876,8 @@ const RamadanScreen = () => {
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
@@ -708,7 +886,7 @@ const RamadanScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#F6F6F6',
   },
   infoContainer: {
     position: 'absolute',

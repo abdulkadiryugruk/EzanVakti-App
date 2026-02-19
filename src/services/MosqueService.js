@@ -88,7 +88,7 @@ export const getCityMosques = async (city, forceRefresh = false) => {
     const coords = CITY_COORDINATES[city];
     if (!coords) return [];
     // Use the location-based fetch for the city center
-    return getMosquesByLocation(coords.lat, coords.lng, 5000);
+    return getMosquesByLocation(coords.lat, coords.lng, 10000);
 };
 
 export const getMosqueCacheInfo = async () => {

@@ -3,25 +3,25 @@ import Foundation
 class SharedDataManager {
     static let shared = SharedDataManager()
     
-    // App Group ID'niz
+    // Xcode'daki Capabilities kısmında tikli olan ID (Senin orijinal ID'n)
+    // Sonu TN ile biten.
     private let appGroupID = "group.com.ezanvakti.shared.W5ZJ4W5TN"
     
     private var userDefaults: UserDefaults? {
         return UserDefaults(suiteName: appGroupID)
     }
     
-    // Bugünün tüm vakitlerini kaydet
+    // --- METODLAR ---
+    
     func saveTodaysPrayerTimes(_ times: [String: String]) {
         userDefaults?.set(times, forKey: "todaysPrayerTimes")
         userDefaults?.set(Date(), forKey: "lastUpdateTime")
     }
     
-    // Bugünün vakitlerini oku
     func getTodaysPrayerTimes() -> [String: String]? {
         return userDefaults?.dictionary(forKey: "todaysPrayerTimes") as? [String: String]
     }
     
-    // Sıradaki vakti kaydet (opsiyonel - React Native'den de hesaplanabilir)
     func saveNextPrayer(name: String, time: String) {
         userDefaults?.set(name, forKey: "nextPrayerName")
         userDefaults?.set(time, forKey: "nextPrayerTime")
@@ -35,12 +35,10 @@ class SharedDataManager {
         return userDefaults?.string(forKey: "nextPrayerTime")
     }
 
-    // Şehir bilgisini kaydet
     func saveCity(_ city: String) {
         userDefaults?.set(city, forKey: "selectedCity")
     }
     
-    // Şehir bilgisini oku
     func getSelectedCity() -> String {
         return userDefaults?.string(forKey: "selectedCity") ?? "Şehir Seçilmedi"
     }

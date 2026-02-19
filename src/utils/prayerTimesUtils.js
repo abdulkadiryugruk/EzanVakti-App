@@ -53,7 +53,7 @@ export const fetchPrayerTimes = async (selectedCity, forceRefresh = false, onDow
                         console.log('✅ iOS Widget\'a veri aktarıldı:', formattedToday);
                     } else {
                         // Android için tüm veriyi gönder
-                        EzanDataModule.saveAllPrayerTimes(cache[selectedCity], selectedCity);
+                        EzanDataModule.saveAllPrayerTimes(cache[selectedCity]);
                     }
                 }
                 

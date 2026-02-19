@@ -16,17 +16,17 @@ struct Provider: TimelineProvider {
         completion(entry)
     }
 
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
+  func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> Void) {
         var entries: [PrayerEntry] = []
 
         // DEBUG: UserDefaults'u kontrol et
-        if let defaults = UserDefaults(suiteName: "group.com.ezanvakti.shared.W5ZJ4W5TN") {
+        if let defaults = UserDefaults(suiteName: "group.com.ezanvakti.shared.W5ZJ4W5TNU") {
+            print("🔍 Widget - AltStore ID ile erişim: ✅")
             print("🔍 Widget Timeline Debug - UserDefaults erişilebilir: ✅")
             print("📦 Raw nextPrayerName: \(defaults.string(forKey: "nextPrayerName") ?? "nil")")
             print("⏰ Raw nextPrayerTime: \(defaults.string(forKey: "nextPrayerTime") ?? "nil")")
             print("🌍 Raw selectedCity: \(defaults.string(forKey: "selectedCity") ?? "nil")")
-            print(
-                "📋 Raw todaysPrayerTimes: \(defaults.dictionary(forKey: "todaysPrayerTimes") ?? [:])"
+            print("📋 Raw todaysPrayerTimes: \(defaults.dictionary(forKey: "todaysPrayerTimes") ?? [:])"
             )
         } else {
             print("❌ Widget Timeline Debug - UserDefaults erişilemiyor!")

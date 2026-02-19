@@ -13,6 +13,8 @@ android/app/build/
 android/build/
 *.apk
 *.ap_
+.env    
+android/gradle.properties
 
 # iOS
 ios/Pods/

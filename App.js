@@ -14,6 +14,7 @@ import PrayerTimesScreen from './src/screens/PrayerTimesScreen';
 import QiblaScreen from './src/screens/QiblaScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import IntroScreen from './src/screens/IntroScreen';
+import RamadanScreen from './src/screens/RamadanScreen';
 import LoadingScreen from './src/components/LoadingScreen';
 
 const AppContent = () => {
@@ -147,6 +148,8 @@ const AppContent = () => {
             nextPrayer={nextPrayer}
           />
         );
+      case 'ramazan':
+        return <RamadanScreen />;
       case 'kible':
         return <QiblaScreen />;
       case 'ayarlar':
@@ -169,12 +172,14 @@ const AppContent = () => {
       />
       <SafeAreaView style={{ flex: 0, backgroundColor: colors.primary }} />
       <SafeAreaView style={[globalStyles.container, { flex: 1, backgroundColor: colors.background }]}>
-        <Header 
-          selectedCity={selectedCity}
-          currentDate={currentDate}
-          nextPrayer={nextPrayer}
-          timeToNextPrayer={timeToNextPrayer}
-        />
+        {activeTab === 'vakitler' && (
+          <Header 
+            selectedCity={selectedCity}
+            currentDate={currentDate}
+            nextPrayer={nextPrayer}
+            timeToNextPrayer={timeToNextPrayer}
+          />
+        )}
         
         {renderContent()}
         

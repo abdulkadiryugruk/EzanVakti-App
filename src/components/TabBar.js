@@ -8,6 +8,7 @@ const TabBar = ({ activeTab, setActiveTab }) => {
 
   const tabs = [
     { id: 'vakitler', label: 'Vakitler', icon: 'clock-outline' },
+    { id: 'ramazan', label: 'Ramazan', icon: 'moon-waxing-crescent' },
     { id: 'kible', label: 'Kıble', icon: 'compass-outline' },
     { id: 'ayarlar', label: 'Ayarlar', icon: 'cog-outline' },
   ];

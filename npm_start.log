@@ -1,0 +1,61 @@
+
+> ezanvakti@0.0.1 start
+> react-native start
+
+
+Welcome to React Native v0.79
+Starting dev server on http://localhost:8081
+
+
+                        ▒▒▓▓▓▓▒▒
+                     ▒▓▓▓▒▒░░▒▒▓▓▓▒
+                  ▒▓▓▓▓░░░▒▒▒▒░░░▓▓▓▓▒
+                 ▓▓▒▒▒▓▓▓▓▓▓▓▓▓▓▓▓▒▒▒▓▓
+                 ▓▓░░░░░▒▓▓▓▓▓▓▒░░░░░▓▓
+                 ▓▓░░▓▓▒░░░▒▒░░░▒▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▒▒▒▒▓▓▓▓▒░░▓▓
+                 ▓▓░░▓▓▓▓▓▓▓▓▓▓▓▓▓▒░░▓▓
+                 ▓▓▒░░▒▒▓▓▓▓▓▓▓▓▒░░░▒▓▓
+                  ▒▓▓▓▒░░░▒▓▓▒░░░▒▓▓▓▒
+                     ▒▓▓▓▒░░░░▒▓▓▓▒
+                        ▒▒▓▓▓▓▒▒
+
+
+                Welcome to Metro v0.82.1
+              Fast - Scalable - Integrated
+
+
+ INFO  Dev server ready. Press Ctrl+C to exit.
+ INFO  Key commands available:
+
+   r  - reload app(s)
+   d  - open Dev Menu
+   j  - open DevTools
+
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  
+[7m [1m💡 JavaScript logs have moved![22m They can now be viewed in React Native DevTools. Tip: Type [1mj[22m in the terminal to open (requires Google Chrome or Microsoft Edge).[27m
+
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
+ INFO  Connection established to app='com.ezanvakti' on device='2107113SR - 14 - API 34'.
+ BUNDLE  ./index.js 
+ INFO  Connection closed to device='2107113SR - 14 - API 34' for app='com.ezanvakti' with code='1006' and reason=''.
